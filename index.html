@@ -184,9 +184,8 @@
         let admins = ["שלום שיליץ"];
         let currentPeriod = 'day';
 
-        // בדיקת חיבור ראשונית
         if(user) {
-            document.getElementById('loginOverlay').style.display = 'none'; // תיקון: שימוש בסטייל ישיר
+            document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContent').classList.remove('hidden');
             document.getElementById('userNameDisplay').innerText = "שלום, " + user;
             sync();
@@ -310,24 +309,38 @@
             sync();
         }
 
+        function changePeriod(p) {
+            currentPeriod = p;
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
+            renderAdminUI();
+        }
+
         function renderAdminUI() {
             if(!admins.includes(user)) return;
             const grouped = {};
             const now = new Date();
             
+            // הגדרת תאריך התחלה לפי התקופה שנבחרה
+            let startDate = new Date();
+            if (currentPeriod === 'day') startDate.setHours(0,0,0,0);
+            else if (currentPeriod === 'week') startDate.setDate(now.getDate() - now.getDay());
+            else if (currentPeriod === 'month') startDate.setDate(1);
+            startDate.setHours(0,0,0,0);
+
             allTasks.forEach(t => {
                 if(!t.worker_name) return;
-                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0, running: [] };
+                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0 };
                 
                 const tDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
-                const isToday = tDate && tDate.toDateString() === now.toDateString();
+                const isInPeriod = tDate && tDate >= startDate;
                 
+                // במבט יומי נספור את כל המשימות המשויכות, במבט תקופתי נספור את מה שבוצע
                 grouped[t.worker_name].total++;
-                if(isToday || t.status === 'הושלם') {
+                if(isInPeriod || (currentPeriod === 'day' && t.status === 'הושלם')) {
                     grouped[t.worker_name].done++;
                     grouped[t.worker_name].time += (t.total_seconds || 0);
                 }
-                if(t.is_running) grouped[t.worker_name].running.push(t);
             });
 
             document.getElementById('adminStats').innerHTML = Object.entries(grouped).map(([name, data]) => {
@@ -415,6 +428,7 @@
             document.getElementById('sectionAdmin').classList.toggle('hidden', isTask);
             document.getElementById('tBtn').className = isTask ? "px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-fuchsia-700" : "px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500";
             document.getElementById('aBtn').className = !isTask ? "px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-fuchsia-700" : "px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500";
+            if(!isTask) renderAdminUI();
         }
 
         function updateUserList() {
