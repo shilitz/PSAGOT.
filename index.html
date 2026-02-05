@@ -20,7 +20,7 @@
         .timer-active { color: #f43f5e; font-weight: 900; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        .completed-row { opacity: 0.5; background-color: #f1f5f9; text-decoration: line-through; }
+        .completed-row { opacity: 0.5; background-color: #f1f5f9; text-decoration: line-through; border-right: 4px solid #cbd5e1 !important; }
         .period-btn.active { background: #701a75; color: white; }
         .admin-task-card { border-right: 4px solid #e2e8f0; transition: all 0.2s; }
         .admin-task-card.running { border-right-color: #f43f5e; background: #fff1f2; }
@@ -30,8 +30,8 @@
 
     <div id="loginOverlay">
         <div class="login-card">
-            <h2 class="text-white text-3xl font-black mb-6 italic text-center">פסגות <span class="text-fuchsia-400">PROTRACK</span></h2>
-            <p class="text-white/70 mb-6 text-sm text-center">מערכת ניהול משימות וביצועים</p>
+            <h2 class="text-white text-4xl font-black mb-2 italic">פסגות</h2>
+            <div class="text-fuchsia-400 font-bold tracking-[0.2em] mb-8 text-sm uppercase">PRO TRACK</div>
             <input id="loginUser" type="text" placeholder="הכנס שם משתמש" class="w-full p-4 rounded-xl mb-4 text-center outline-none bg-white/90 focus:bg-white transition-all">
             <button onclick="handleLogin()" class="w-full bg-fuchsia-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-fuchsia-700 active:scale-95 transition-all">כניסה למערכת</button>
         </div>
@@ -65,8 +65,8 @@
 
         <nav class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-50">
             <div class="flex gap-4 items-center">
-                <div class="text-xl font-black italic text-purple-900 border-l-4 border-fuchsia-600 pl-4 ml-2">פסגות</div>
-                <span id="userNameDisplay" class="font-black text-slate-600 border-l pl-4 ml-2"></span>
+                <div class="text-2xl font-black italic text-purple-900 border-l-4 border-fuchsia-600 pl-4 ml-2">פסגות</div>
+                <span id="userNameDisplay" class="font-bold text-slate-500 border-l pl-4 ml-2"></span>
                 <div class="bg-slate-100 p-1 rounded-lg flex gap-1">
                     <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700 transition-all">משימות</button>
                     <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 transition-all">דוחות וניהול</button>
@@ -95,7 +95,7 @@
                 </div>
 
                 <div class="bg-white rounded-3xl shadow-sm overflow-hidden border">
-                    <table class="w-full text-right">
+                    <table class="w-full text-right border-collapse">
                         <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                             <tr><th class="p-4">שעה / טווח</th><th class="p-4">משימה</th><th class="p-4 text-center">טיימר</th><th class="p-4 text-center">פעולות</th></tr>
                         </thead>
@@ -177,9 +177,9 @@
             const tbody = document.getElementById('workerTable');
             const myTasks = allTasks.filter(t => t.worker_name === user);
             
-            // הפרדת משימות: פעילות למעלה, גמורות למטה
-            const active = myTasks.filter(t => (t.status !== 'הושלם') && (t.last_completed_date !== todayStr));
-            const done = myTasks.filter(t => (t.status === 'הושלם') || (t.last_completed_date === todayStr));
+            // לוגיקה: משימות שלא הושלמו למעלה, משימות שהושלמו למטה
+            const active = myTasks.filter(t => t.status !== 'הושלם' && t.last_completed_date !== todayStr);
+            const done = myTasks.filter(t => t.status === 'הושלם' || t.last_completed_date === todayStr);
             const sorted = [...active, ...done];
 
             if(sorted.length === 0) {
@@ -289,9 +289,13 @@
             });
 
             statsDiv.innerHTML = Object.entries(workers).map(([name, data]) => {
-                const sorted = [...data.tasks.filter(t => t.last_completed_date !== todayStr && t.status !== 'הושלם'), ...data.tasks.filter(t => t.last_completed_date === todayStr || t.status === 'הושלם')];
+                // אצל המנהל: משימות שבוצעו היום עוברות לתחתית הרשימה של אותו עובד
+                const active = data.tasks.filter(t => t.last_completed_date !== todayStr && t.status !== 'הושלם');
+                const done = data.tasks.filter(t => t.last_completed_date === todayStr || t.status === 'הושלם');
+                const sorted = [...active, ...done];
+
                 return `
-                <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden text-right">
                     <div class="bg-purple-900 p-6 text-white flex justify-between items-center">
                         <div>
                             <h3 class="text-2xl font-black italic tracking-tighter">${name}</h3>
@@ -304,7 +308,7 @@
                             <div class="text-3xl font-black">${data.stats.done}<span class="text-purple-400 text-lg">/${data.stats.total}</span></div>
                         </div>
                     </div>
-                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50/50 text-right">
+                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50/50">
                         ${sorted.map(t => {
                             const isDone = t.status === 'הושלם' || t.last_completed_date === todayStr;
                             return `
