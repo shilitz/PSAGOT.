@@ -10,7 +10,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
         body { font-family: 'Assistant', sans-serif; background: #f8fafc; text-align: right; margin: 0; overflow-x: hidden; }
-        
+       
         #loginOverlay {
             position: fixed; inset: 0; z-index: 9999;
             background: linear-gradient(135deg, #4c1d95 0%, #701a75 100%);
@@ -27,19 +27,19 @@
         .tab-btn.active { border-bottom: 4px solid #a21caf; color: #a21caf; font-weight: 800; }
         .period-btn { background: white; color: #64748b; border: 1px solid #e2e8f0; }
         .period-btn.active { background: #701a75; color: white; border-color: #701a75; box-shadow: 0 4px 12px rgba(112, 26, 117, 0.3); }
-        
+       
         .modal { display: none; position: fixed; z-index: 100; inset: 0; background: rgba(46, 16, 101, 0.85); align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal.open { display: flex; }
-        
+       
         .timer-active { color: #f43f5e; font-weight: 900; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-        
+       
         .stat-card { transition: all 0.3s ease; border-right: 6px solid #701a75; }
         .completed-row { opacity: 0.6; background-color: #fdf4ff; }
-        
+       
         .separator { border-top: 3px dashed #d8b4fe; margin: 20px 0; position: relative; }
         .separator::after { content: 'משימות שבוצעו היום'; position: absolute; top: -12px; right: 20px; background: #f8fafc; padding: 0 10px; font-size: 12px; font-weight: bold; color: #a21caf; }
-        
+       
         input, select { text-align: right; }
         .logo-img { max-height: 60px; margin: 0 auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
         .logo-img-light { filter: brightness(0) invert(1); }
@@ -178,14 +178,15 @@
         const SB_URL = 'https://ytcthmwkmvajmfegnqas.supabase.co';
         const SB_KEY = 'sb_publishable_zFfoc_9qq0d__uyeyUUqZA_OQ4m5_o3';
         const _s = supabase.createClient(SB_URL, SB_KEY);
-        
+       
         let user = localStorage.getItem('pro_u');
         let allTasks = [];
         let admins = ["שלום שיליץ"];
         let currentPeriod = 'day';
 
+        // בדיקת חיבור ראשונית
         if(user) {
-            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'none'; // תיקון: שימוש בסטייל ישיר
             document.getElementById('appContent').classList.remove('hidden');
             document.getElementById('userNameDisplay').innerText = "שלום, " + user;
             sync();
@@ -203,12 +204,12 @@
                 const { data: tasks, error } = await _s.from('tasks').select('*').order('scheduled_time', { ascending: true });
                 if(error) throw error;
                 allTasks = tasks || [];
-                
+               
                 const { data: settingsData } = await _s.from('settings').select('*').eq('key', 'admin_users');
                 if(settingsData && settingsData.length > 0) admins = settingsData[0].value;
 
                 document.getElementById('aBtn').classList.toggle('hidden', !admins.includes(user));
-                
+               
                 updateUserList();
                 renderWorkerUI();
                 renderAdminUI();
@@ -261,7 +262,7 @@
         async function toggleTimer(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
             const now = new Date().toISOString();
-            let up = t.is_running ? 
+            let up = t.is_running ?
                 { is_running: false, total_seconds: (parseInt(t.total_seconds) || 0) + Math.floor((new Date() - new Date(t.last_start)) / 1000), last_start: null } :
                 { is_running: true, last_start: now };
             await _s.from('tasks').update(up).eq('id', id);
@@ -273,10 +274,10 @@
             const today = new Date().toISOString().split('T')[0];
             let sec = parseInt(t.total_seconds) || 0;
             if(t.is_running) sec += Math.floor((new Date() - new Date(t.last_start)) / 1000);
-            
+           
             let up = { is_running: false, last_start: null, total_seconds: sec, last_completed_date: today };
             if(t.recurrence === 'חד פעמי') up.status = 'הושלם';
-            
+           
             await _s.from('tasks').update(up).eq('id', id);
             sync();
         }
@@ -291,17 +292,17 @@
             if(!title) return;
             const target = document.getElementById('inTargetUser').value;
             let names = (target === 'כולם') ? [...new Set(allTasks.map(t => t.worker_name))] : [target === 'self' ? user : target];
-            
+           
             const batch = names.filter(n => n).map(n => ({
-                title, 
-                worker_name: n, 
+                title,
+                worker_name: n,
                 description: document.getElementById('inDesc').value,
                 scheduled_time: document.getElementById('inTime').value || '00:00',
                 hour_range: document.getElementById('inRange').value,
                 recurrence: document.getElementById('inRecur').value,
                 status: 'בביצוע'
             }));
-            
+           
             await _s.from('tasks').insert(batch);
             document.getElementById('inTitle').value = '';
             document.getElementById('inDesc').value = '';
@@ -309,37 +310,24 @@
             sync();
         }
 
-        // --- מנגנון הדוחות המתוקן ---
-        function changePeriod(p) {
-            currentPeriod = p;
-            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
-            renderAdminUI();
-        }
-
         function renderAdminUI() {
             if(!admins.includes(user)) return;
             const grouped = {};
             const now = new Date();
-            
-            let startOfPeriod = new Date();
-            if (currentPeriod === 'day') startOfPeriod.setHours(0,0,0,0);
-            else if (currentPeriod === 'week') startOfPeriod.setDate(now.getDate() - now.getDay());
-            else if (currentPeriod === 'month') startOfPeriod.setDate(1);
-            startOfPeriod.setHours(0,0,0,0);
-
+           
             allTasks.forEach(t => {
                 if(!t.worker_name) return;
-                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0 };
-                
-                const compDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
-                const isCompletedInPeriod = compDate && compDate >= startOfPeriod;
-
+                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0, running: [] };
+               
+                const tDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
+                const isToday = tDate && tDate.toDateString() === now.toDateString();
+               
                 grouped[t.worker_name].total++;
-                if (isCompletedInPeriod || (currentPeriod === 'day' && t.status === 'הושלם')) {
+                if(isToday || t.status === 'הושלם') {
                     grouped[t.worker_name].done++;
                     grouped[t.worker_name].time += (t.total_seconds || 0);
                 }
+                if(t.is_running) grouped[t.worker_name].running.push(t);
             });
 
             document.getElementById('adminStats').innerHTML = Object.entries(grouped).map(([name, data]) => {
@@ -361,7 +349,6 @@
                 `;
             }).join('');
         }
-        // ------------------------------
 
         function openEdit(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
@@ -428,7 +415,6 @@
             document.getElementById('sectionAdmin').classList.toggle('hidden', isTask);
             document.getElementById('tBtn').className = isTask ? "px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-fuchsia-700" : "px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500";
             document.getElementById('aBtn').className = !isTask ? "px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-fuchsia-700" : "px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500";
-            if(!isTask) renderAdminUI();
         }
 
         function updateUserList() {
