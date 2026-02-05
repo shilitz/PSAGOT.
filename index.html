@@ -10,16 +10,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
         body { font-family: 'Assistant', sans-serif; background: #f8fafc; text-align: right; margin: 0; overflow-x: hidden; }
-       
+        
         #loginOverlay { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #4c1d95 0%, #701a75 100%); display: flex; align-items: center; justify-content: center; }
         .login-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 3rem; border-radius: 2rem; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.2); }
 
         .modal { display: none; position: fixed; z-index: 100; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal.open { display: flex; }
-       
+        
         .timer-active { color: #f43f5e; font-weight: 900; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-       
+        
         .completed-row { opacity: 0.5; background-color: #f1f5f9; text-decoration: line-through; }
         .period-btn.active { background: #701a75; color: white; }
         .admin-task-card { border-right: 4px solid #e2e8f0; transition: all 0.2s; }
@@ -30,8 +30,8 @@
 
     <div id="loginOverlay">
         <div class="login-card">
-            <h2 class="text-white text-3xl font-black mb-6 italic">PRO<span class="text-fuchsia-400">TRACK</span></h2>
-            <p class="text-white/70 mb-6 text-sm">מערכת ניהול משימות וביצועים</p>
+            <h2 class="text-white text-3xl font-black mb-6 italic text-center">פסגות <span class="text-fuchsia-400">PROTRACK</span></h2>
+            <p class="text-white/70 mb-6 text-sm text-center">מערכת ניהול משימות וביצועים</p>
             <input id="loginUser" type="text" placeholder="הכנס שם משתמש" class="w-full p-4 rounded-xl mb-4 text-center outline-none bg-white/90 focus:bg-white transition-all">
             <button onclick="handleLogin()" class="w-full bg-fuchsia-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-fuchsia-700 active:scale-95 transition-all">כניסה למערכת</button>
         </div>
@@ -39,13 +39,13 @@
 
     <div id="appContent" class="hidden">
         <div id="editModal" class="modal p-4">
-            <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
+            <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-right">
                 <h3 class="text-2xl font-black mb-6 text-purple-900">עריכת משימה</h3>
                 <input id="editId" type="hidden">
-                <div class="space-y-4 text-right">
-                    <div><label class="text-xs font-bold text-slate-500">כותרת המשימה</label><input id="editTitle" type="text" class="w-full p-3 border rounded-xl outline-none"></div>
-                    <div><label class="text-xs font-bold text-slate-500">תיאור</label><input id="editDesc" type="text" class="w-full p-3 border rounded-xl outline-none"></div>
-                    <div><label class="text-xs font-bold text-slate-500">טווח שעות</label><input id="editRange" type="text" class="w-full p-3 border rounded-xl outline-none"></div>
+                <div class="space-y-4">
+                    <div><label class="text-xs font-bold text-slate-500">כותרת המשימה</label><input id="editTitle" type="text" class="w-full p-3 border rounded-xl outline-none text-right"></div>
+                    <div><label class="text-xs font-bold text-slate-500">תיאור</label><input id="editDesc" type="text" class="w-full p-3 border rounded-xl outline-none text-right"></div>
+                    <div><label class="text-xs font-bold text-slate-500">טווח שעות</label><input id="editRange" type="text" class="w-full p-3 border rounded-xl outline-none text-right"></div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="text-xs font-bold text-slate-500">שעת יעד</label><input id="editTime" type="time" class="p-3 border rounded-xl w-full"></div>
                         <div><label class="text-xs font-bold text-slate-500">מחזוריות</label>
@@ -65,7 +65,8 @@
 
         <nav class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-50">
             <div class="flex gap-4 items-center">
-                <span id="userNameDisplay" class="font-black text-purple-900 border-l pl-4 ml-2"></span>
+                <div class="text-xl font-black italic text-purple-900 border-l-4 border-fuchsia-600 pl-4 ml-2">פסגות</div>
+                <span id="userNameDisplay" class="font-black text-slate-600 border-l pl-4 ml-2"></span>
                 <div class="bg-slate-100 p-1 rounded-lg flex gap-1">
                     <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700 transition-all">משימות</button>
                     <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 transition-all">דוחות וניהול</button>
@@ -75,12 +76,11 @@
         </nav>
 
         <main class="p-6 max-w-6xl mx-auto">
-           
             <div id="sectionTasks" class="space-y-6">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <input id="inTitle" type="text" placeholder="שם המשימה..." class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500 transition-colors">
-                        <input id="inDesc" type="text" placeholder="תיאור / הערות" class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500 transition-colors">
+                        <input id="inTitle" type="text" placeholder="שם המשימה..." class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500 transition-colors text-right">
+                        <input id="inDesc" type="text" placeholder="תיאור / הערות" class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500 transition-colors text-right">
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <select id="inTargetUser" class="p-3 bg-slate-50 rounded-xl font-bold outline-none border"></select>
@@ -89,7 +89,7 @@
                             <option value="חד פעמי">חד פעמי</option>
                             <option value="יומי">יומי</option>
                         </select>
-                        <input id="inRange" type="text" placeholder="טווח שעות" class="p-3 bg-slate-50 rounded-xl border">
+                        <input id="inRange" type="text" placeholder="טווח שעות" class="p-3 bg-slate-50 rounded-xl border text-right">
                         <button onclick="addTask()" class="bg-fuchsia-600 text-white font-black rounded-xl hover:bg-fuchsia-700 shadow-md transition-all">הוסף +</button>
                     </div>
                 </div>
@@ -105,9 +105,9 @@
             </div>
 
             <div id="sectionAdmin" class="hidden space-y-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6 text-right">
                     <div>
-                        <h2 class="text-3xl font-black text-purple-900 tracking-tight">דוחות ביצועים</h2>
+                        <h2 class="text-3xl font-black text-purple-900 tracking-tight italic">פסגות | דוחות ביצועים</h2>
                         <p class="text-slate-400 text-sm font-bold">מעקב משימות וזמני עבודה בצוות</p>
                     </div>
                     <div class="flex gap-2 bg-slate-100 p-1 rounded-xl border">
@@ -116,7 +116,7 @@
                         <button onclick="changePeriod('month')" id="btnMonth" class="period-btn px-4 py-2 rounded-lg text-xs font-bold transition-all">החודש (מה-5)</button>
                     </div>
                 </div>
-               
+                
                 <div class="flex gap-3">
                     <button onclick="document.getElementById('xlFile').click()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all">ייבוא מ-CSV</button>
                     <input type="file" id="xlFile" class="hidden" accept=".csv" onchange="handleFile(this)">
@@ -131,13 +131,12 @@
         const SB_URL = 'https://ytcthmwkmvajmfegnqas.supabase.co';
         const SB_KEY = 'sb_publishable_zFfoc_9qq0d__uyeyUUqZA_OQ4m5_o3';
         const _s = supabase.createClient(SB_URL, SB_KEY);
-       
+        
         let user = localStorage.getItem('pro_u');
         let allTasks = [];
-        let admins = ["שלום שיליץ"]; // רשימת מנהלים כגיבוי
+        let admins = ["שלום שיליץ"];
         let currentPeriod = 'day';
 
-        // בדיקה ראשונית של התחברות
         if(user) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContent').classList.remove('hidden');
@@ -157,20 +156,18 @@
                 const { data: tasks, error: taskError } = await _s.from('tasks').select('*').order('scheduled_time', { ascending: true });
                 if(taskError) throw taskError;
                 allTasks = tasks || [];
-               
+                
                 const { data: set } = await _s.from('settings').select('*').eq('key', 'admin_users');
                 if(set && set[0]) admins = set[0].value;
-               
-                // עדכון תצוגה
+                
                 const isAdmin = admins.map(a => a.trim()).includes(user.trim());
                 document.getElementById('aBtn').classList.toggle('hidden', !isAdmin);
-               
+                
                 updateUserList();
                 renderWorkerUI();
                 if(isAdmin) renderAdminUI();
             } catch (err) {
                 console.error("Sync error:", err);
-                // גם אם יש שגיאה, ננסה להראות מה שיש ב-allTasks
                 renderWorkerUI();
             }
         }
@@ -179,16 +176,21 @@
             const todayStr = new Date().toISOString().split('T')[0];
             const tbody = document.getElementById('workerTable');
             const myTasks = allTasks.filter(t => t.worker_name === user);
-           
-            if(myTasks.length === 0) {
+            
+            // הפרדת משימות: פעילות למעלה, גמורות למטה
+            const active = myTasks.filter(t => (t.status !== 'הושלם') && (t.last_completed_date !== todayStr));
+            const done = myTasks.filter(t => (t.status === 'הושלם') || (t.last_completed_date === todayStr));
+            const sorted = [...active, ...done];
+
+            if(sorted.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold">אין משימות להצגה. הוסף משימה חדשה למעלה.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = myTasks.map(t => {
+            tbody.innerHTML = sorted.map(t => {
                 const isDone = (t.status === 'הושלם') || (t.last_completed_date === todayStr);
                 const timeStr = t.hour_range || (t.scheduled_time ? t.scheduled_time.slice(0,5) : '--:--');
-               
+                
                 return `
                     <tr class="${isDone ? 'completed-row' : ''} hover:bg-slate-50 transition-colors">
                         <td class="p-4 font-black text-purple-700 text-lg">${timeStr}</td>
@@ -208,7 +210,7 @@
                                 </button>
                                 <button onclick="finishTask('${t.id}')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-md hover:bg-emerald-700 transition-all">בוצע</button>
                             ` : `
-                                <button onclick="undoTask('${t.id}')" class="text-slate-400 text-xs font-bold hover:underline underline-offset-4">ביטול ביצוע ↺</button>
+                                <button onclick="undoTask('${t.id}')" class="bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-black shadow-sm">שחזור ↺</button>
                             `}
                             <button onclick="openEdit('${t.id}')" class="text-slate-300 px-3 hover:text-purple-600 transition-colors">✎</button>
                         </td>
@@ -220,7 +222,7 @@
         async function toggleTimer(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
             const now = new Date().toISOString();
-            let up = t.is_running ?
+            let up = t.is_running ? 
                 { is_running: false, total_seconds: (t.total_seconds || 0) + Math.floor((new Date() - new Date(t.last_start)) / 1000), last_start: null } :
                 { is_running: true, last_start: now };
             await _s.from('tasks').update(up).eq('id', id);
@@ -232,14 +234,7 @@
             const today = new Date().toISOString().split('T')[0];
             let sec = t.total_seconds || 0;
             if(t.is_running) sec += Math.floor((new Date() - new Date(t.last_start)) / 1000);
-           
-            await _s.from('tasks').update({
-                is_running: false,
-                last_start: null,
-                total_seconds: sec,
-                last_completed_date: today,
-                status: t.recurrence === 'יומי' ? 'בביצוע' : 'הושלם'
-            }).eq('id', id);
+            await _s.from('tasks').update({ is_running: false, last_start: null, total_seconds: sec, last_completed_date: today, status: t.recurrence === 'יומי' ? 'בביצוע' : 'הושלם' }).eq('id', id);
             sync();
         }
 
@@ -252,28 +247,17 @@
             const title = document.getElementById('inTitle').value.trim();
             const target = document.getElementById('inTargetUser').value;
             if(!title) return;
-           
             const names = (target === 'כולם') ? [...new Set(allTasks.map(t => t.worker_name))] : [target === 'self' ? user : target];
-            const rows = names.map(n => ({
-                title, worker_name: n,
-                description: document.getElementById('inDesc').value,
-                scheduled_time: document.getElementById('inTime').value || '00:00',
-                hour_range: document.getElementById('inRange').value,
-                recurrence: document.getElementById('inRecur').value,
-                status: 'בביצוע'
+            const rows = names.map(n => ({ 
+                title, worker_name: n, description: document.getElementById('inDesc').value, 
+                scheduled_time: document.getElementById('inTime').value || '00:00', 
+                hour_range: document.getElementById('inRange').value, 
+                recurrence: document.getElementById('inRecur').value, status: 'בביצוע' 
             }));
-           
             await _s.from('tasks').insert(rows);
             document.getElementById('inTitle').value = '';
             document.getElementById('inDesc').value = '';
             sync();
-        }
-
-        function changePeriod(p) {
-            currentPeriod = p;
-            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-purple-700'));
-            document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active', 'bg-white', 'shadow-sm', 'text-purple-700');
-            renderAdminUI();
         }
 
         function renderAdminUI() {
@@ -281,43 +265,32 @@
             const workers = {};
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
-           
+            
             let filterStart = new Date();
-            if(currentPeriod === 'day') {
-                filterStart.setHours(0,0,0,0);
-            } else if(currentPeriod === 'week') {
-                filterStart.setDate(now.getDate() - now.getDay());
-                filterStart.setHours(0,0,0,0);
-            } else if(currentPeriod === 'month') {
-                if(now.getMonth() === 1 && now.getFullYear() === 2026) {
-                    filterStart = new Date(2026, 1, 5, 0, 0, 0);
-                } else {
-                    filterStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-                }
+            if(currentPeriod === 'day') filterStart.setHours(0,0,0,0);
+            else if(currentPeriod === 'week') { filterStart.setDate(now.getDate() - now.getDay()); filterStart.setHours(0,0,0,0); }
+            else if(currentPeriod === 'month') {
+                if(now.getMonth() === 1 && now.getFullYear() === 2026) filterStart = new Date(2026, 1, 5, 0, 0, 0);
+                else filterStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
             }
 
             allTasks.forEach(t => {
                 if(!t.worker_name) return;
-                if(!workers[t.worker_name]) workers[t.worker_name] = { tasks: [], stats: { total: 0, done: 0, timeToday: 0, timePeriod: 0 } };
+                if(!workers[t.worker_name]) workers[t.worker_name] = { tasks: [], stats: { total: 0, done: 0, timeToday: 0 } };
                 workers[t.worker_name].tasks.push(t);
-               
                 const compDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
                 workers[t.worker_name].stats.total++;
-               
-                if(compDate && compDate >= filterStart) {
-                    workers[t.worker_name].stats.done++;
-                    workers[t.worker_name].stats.timePeriod += (t.total_seconds || 0);
-                }
-
-                if(t.last_completed_date === todayStr) {
-                    workers[t.worker_name].stats.timeToday += (t.total_seconds || 0);
-                } else if(t.is_running) {
+                if(compDate && compDate >= filterStart) workers[t.worker_name].stats.done++;
+                if(t.last_completed_date === todayStr) workers[t.worker_name].stats.timeToday += (t.total_seconds || 0);
+                else if(t.is_running) {
                     const extra = Math.floor((new Date() - new Date(t.last_start)) / 1000);
                     workers[t.worker_name].stats.timeToday += (t.total_seconds || 0) + extra;
                 }
             });
 
-            statsDiv.innerHTML = Object.entries(workers).map(([name, data]) => `
+            statsDiv.innerHTML = Object.entries(workers).map(([name, data]) => {
+                const sorted = [...data.tasks.filter(t => t.last_completed_date !== todayStr && t.status !== 'הושלם'), ...data.tasks.filter(t => t.last_completed_date === todayStr || t.status === 'הושלם')];
+                return `
                 <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                     <div class="bg-purple-900 p-6 text-white flex justify-between items-center">
                         <div>
@@ -329,22 +302,19 @@
                         </div>
                         <div class="text-right">
                             <div class="text-3xl font-black">${data.stats.done}<span class="text-purple-400 text-lg">/${data.stats.total}</span></div>
-                            <div class="text-[9px] font-black opacity-50 uppercase tracking-widest">משימות תקופתיות</div>
                         </div>
                     </div>
-                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50/50">
-                        ${data.tasks.map(t => {
+                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50/50 text-right">
+                        ${sorted.map(t => {
                             const isDone = t.status === 'הושלם' || t.last_completed_date === todayStr;
                             return `
-                            <div class="admin-task-card ${t.is_running ? 'running' : ''} bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-slate-100">
+                            <div class="admin-task-card ${t.is_running ? 'running' : ''} bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-slate-100 ${isDone ? 'opacity-50' : ''}">
                                 <div class="overflow-hidden">
                                     <div class="font-bold text-sm truncate ${isDone ? 'line-through text-slate-300' : 'text-slate-800'}">${t.title}</div>
-                                    <div class="text-[10px] text-slate-400 font-bold">${t.hour_range || t.scheduled_time || ''}</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">${t.hour_range || ''}</div>
                                 </div>
                                 <div class="text-right flex flex-col items-end">
-                                    <div id="admin-timer-${t.id}" class="font-mono text-sm ${t.is_running ? 'text-rose-600 font-black' : 'text-slate-300'}">
-                                        ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
-                                    </div>
+                                    <div id="admin-timer-${t.id}" class="font-mono text-sm ${t.is_running ? 'text-rose-600 font-black' : 'text-slate-300'}">${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}</div>
                                     <div class="text-[8px] font-black uppercase px-2 py-0.5 rounded-full mt-1 ${isDone ? 'bg-emerald-100 text-emerald-600' : (t.is_running ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400')}">
                                         ${isDone ? 'DONE' : (t.is_running ? 'LIVE' : 'WAIT')}
                                     </div>
@@ -352,11 +322,15 @@
                             </div>`;
                         }).join('')}
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
-        // עריכה וכלים נוספים
+        function formatTime(tot, start) {
+            let s = tot || 0; if(start) s += Math.floor((new Date() - new Date(start)) / 1000);
+            const h = Math.floor(s/3600).toString().padStart(2,'0'), m = Math.floor((s%3600)/60).toString().padStart(2,'0'), sec = (s%60).toString().padStart(2,'0');
+            return `${h}:${m}:${sec}`;
+        }
         function openEdit(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
             if(!t) return;
@@ -368,41 +342,9 @@
             document.getElementById('editRecur').value = t.recurrence;
             document.getElementById('editModal').classList.add('open');
         }
-
         async function saveEdit() {
-            await _s.from('tasks').update({
-                title: document.getElementById('editTitle').value,
-                description: document.getElementById('editDesc').value,
-                hour_range: document.getElementById('editRange').value,
-                scheduled_time: document.getElementById('editTime').value,
-                recurrence: document.getElementById('editRecur').value
-            }).eq('id', document.getElementById('editId').value);
-            closeEdit();
-            sync();
-        }
-
-        function handleFile(input) {
-            if(!input.files[0]) return;
-            Papa.parse(input.files[0], { header: true, complete: async (r) => {
-                const data = r.data.filter(x => x.title).map(x => ({
-                    title: x.title,
-                    worker_name: x.worker_name || user,
-                    description: x.description || '',
-                    scheduled_time: x.scheduled_time || '00:00',
-                    hour_range: x.hour_range || '',
-                    recurrence: x.recurrence || 'חד פעמי',
-                    status: 'בביצוע'
-                }));
-                await _s.from('tasks').insert(data);
-                sync();
-            }});
-        }
-
-        function formatTime(tot, start) {
-            let s = tot || 0;
-            if(start) s += Math.floor((new Date() - new Date(start)) / 1000);
-            const h = Math.floor(s/3600).toString().padStart(2,'0'), m = Math.floor((s%3600)/60).toString().padStart(2,'0'), sec = (s%60).toString().padStart(2,'0');
-            return `${h}:${m}:${sec}`;
+            await _s.from('tasks').update({ title: document.getElementById('editTitle').value, description: document.getElementById('editDesc').value, hour_range: document.getElementById('editRange').value, scheduled_time: document.getElementById('editTime').value, recurrence: document.getElementById('editRecur').value }).eq('id', document.getElementById('editId').value);
+            closeEdit(); sync();
         }
         function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
         function switchTab(t) {
@@ -419,8 +361,14 @@
             users.forEach(u => { if(u !== user) opts += `<option value="${u}">${u}</option>`; });
             document.getElementById('inTargetUser').innerHTML = opts;
         }
+        function changePeriod(p) { currentPeriod = p; renderAdminUI(); }
         function logout() { localStorage.clear(); location.reload(); }
-       
+        function handleFile(input) {
+            Papa.parse(input.files[0], { header: true, complete: async (r) => {
+                const data = r.data.filter(x => x.title).map(x => ({ title: x.title, worker_name: x.worker_name || user, description: x.description || '', scheduled_time: x.scheduled_time || '00:00', hour_range: x.hour_range || '', recurrence: x.recurrence || 'חד פעמי', status: 'בביצוע' }));
+                await _s.from('tasks').insert(data); sync();
+            }});
+        }
         setInterval(() => {
             document.querySelectorAll('[id^="timer-"], [id^="admin-timer-"]').forEach(el => {
                 const id = el.id.replace('timer-', '').replace('admin-', '');
@@ -428,9 +376,7 @@
                 if(t && t.is_running) el.innerText = formatTime(t.total_seconds, t.last_start);
             });
         }, 1000);
-
         _s.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => sync()).subscribe();
     </script>
 </body>
 </html>
-
