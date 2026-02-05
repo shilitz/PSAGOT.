@@ -168,9 +168,9 @@
                     <td class="p-4 font-black text-[#4e1d4e]">${t.scheduled_time?.slice(0,5) || '--:--'}</td>
                     <td class="p-4"><div class="font-bold text-slate-800">${t.title}</div><div class="text-[10px] text-slate-400 font-bold">${t.description || ''}</div></td>
                     <td class="p-4 text-center"><div id="timer-${t.id}" class="font-mono text-xl ${t.is_running ? 'timer-active' : 'text-slate-300'}">${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}</div></td>
-                    <td class="p-4 text-center flex justify-center gap-2">
+<td class="p-4 text-center flex justify-center gap-2">
                         ${!isDone ? `<button onclick="toggleTimer('${t.id}')" class="bg-slate-100 px-4 py-2 rounded-xl text-[10px] font-black">${t.is_running ? 'עצור' : 'הפעל'}</button><button onclick="finishTask('${t.id}')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black">בוצע</button>` : `<button onclick="undoTask('${t.id}')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px]">שחזור ↺</button>`}
-                        <button onclick="openEdit('${t.id}')" class="text-slate-300 px-2 hover:text-[#c12080]">✎</button>
+                        <button onclick="deleteTask('${t.id}')" class="text-rose-500 hover:scale-125 transition-transform p-1" title="מחיקה">🗑️</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -234,6 +234,13 @@
                 sync(); 
             }
         }
+        async function deleteTask(id) {
+    if(confirm("האם אתה בטוח שברצונך למחוק את המשימה לצמיתות?")) {
+        const { error } = await _s.from('tasks').delete().eq('id', id);
+        if(!error) sync();
+        else alert("שגיאה במחיקה: " + error.message);
+    }
+}
 
         function updateUserList() {
             const users = [...new Set(allTasks.map(t => t.worker_name))].filter(u => u);
@@ -326,3 +333,4 @@
     </script>
 </body>
 </html>
+
