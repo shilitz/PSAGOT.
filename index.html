@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>פסגות | ProTrack v2.0</title>
+    <title>פסגות | ProTrack v2.0 Official</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -22,6 +22,8 @@
         
         .completed-row { opacity: 0.5; background-color: #f1f5f9; text-decoration: line-through; }
         .period-btn.active { background: #701a75; color: white; }
+        .admin-task-card { border-right: 4px solid #e2e8f0; transition: all 0.2s; }
+        .admin-task-card.running { border-right-color: #f43f5e; background: #fff1f2; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -37,75 +39,73 @@
     <div id="appContent" class="hidden">
         <div id="editModal" class="modal p-4">
             <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
-                <h3 class="text-2xl font-black mb-6">עריכת משימה</h3>
+                <h3 class="text-2xl font-black mb-6 text-purple-900">עריכת משימה</h3>
                 <input id="editId" type="hidden">
-                <div class="space-y-4">
-                    <input id="editTitle" type="text" placeholder="כותרת" class="w-full p-3 border rounded-xl">
-                    <input id="editDesc" type="text" placeholder="תיאור" class="w-full p-3 border rounded-xl">
-                    <input id="editRange" type="text" placeholder="טווח שעות" class="w-full p-3 border rounded-xl">
+                <div class="space-y-4 text-right">
+                    <div><label class="text-xs font-bold text-slate-500">כותרת המשימה</label><input id="editTitle" type="text" class="w-full p-3 border rounded-xl outline-none"></div>
+                    <div><label class="text-xs font-bold text-slate-500">תיאור</label><input id="editDesc" type="text" class="w-full p-3 border rounded-xl outline-none"></div>
+                    <div><label class="text-xs font-bold text-slate-500">טווח שעות</label><input id="editRange" type="text" class="w-full p-3 border rounded-xl outline-none"></div>
                     <div class="grid grid-cols-2 gap-4">
-                        <input id="editTime" type="time" class="p-3 border rounded-xl">
-                        <select id="editRecur" class="p-3 border rounded-xl">
-                            <option value="חד פעמי">חד פעמי</option>
-                            <option value="יומי">יומי</option>
-                        </select>
+                        <div><label class="text-xs font-bold text-slate-500">שעת יעד</label><input id="editTime" type="time" class="p-3 border rounded-xl w-full"></div>
+                        <div><label class="text-xs font-bold text-slate-500">מחזוריות</label>
+                            <select id="editRecur" class="p-3 border rounded-xl w-full">
+                                <option value="חד פעמי">חד פעמי</option>
+                                <option value="יומי">יומי</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="flex gap-3 mt-6">
-                    <button onclick="saveEdit()" class="flex-1 bg-fuchsia-600 text-white py-3 rounded-xl font-bold">שמור</button>
+                <div class="flex gap-3 mt-8">
+                    <button onclick="saveEdit()" class="flex-1 bg-fuchsia-600 text-white py-3 rounded-xl font-bold">שמור שינויים</button>
                     <button onclick="closeEdit()" class="flex-1 bg-slate-200 py-3 rounded-xl">ביטול</button>
                 </div>
             </div>
         </div>
 
         <nav class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-50">
-            <div class="flex gap-4">
+            <div class="flex gap-4 items-center">
                 <span id="userNameDisplay" class="font-bold text-purple-900"></span>
                 <div class="bg-slate-100 p-1 rounded-lg">
-                    <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1 rounded-md text-sm font-bold bg-white shadow-sm">משימות</button>
-                    <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1 rounded-md text-sm font-bold">ניהול</button>
+                    <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700">המשימות שלי</button>
+                    <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1 rounded-md text-sm font-bold text-slate-500">לוח מנהלים</button>
                 </div>
             </div>
-            <button onclick="logout()" class="text-rose-500 text-xs font-bold">יציאה</button>
+            <button onclick="logout()" class="text-rose-500 text-xs font-bold">יציאה מהמערכת</button>
         </nav>
 
         <main class="p-6 max-w-6xl mx-auto">
+            
             <div id="sectionTasks" class="space-y-6">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <input id="inTitle" type="text" placeholder="שם המשימה..." class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500">
-                        <input id="inDesc" type="text" placeholder="תיאור נוסף" class="p-4 bg-slate-50 rounded-2xl outline-none border">
+                        <input id="inTitle" type="text" placeholder="שם המשימה לביצוע..." class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500">
+                        <input id="inDesc" type="text" placeholder="תיאור, הערות או קישור" class="p-4 bg-slate-50 rounded-2xl outline-none border">
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <select id="inTargetUser" class="p-3 bg-slate-50 rounded-xl font-bold"></select>
-                        <input id="inTime" type="time" class="p-3 bg-slate-50 rounded-xl">
-                        <select id="inRecur" class="p-3 bg-slate-50 rounded-xl">
+                        <select id="inTargetUser" class="p-3 bg-slate-50 rounded-xl font-bold outline-none border"></select>
+                        <input id="inTime" type="time" class="p-3 bg-slate-50 rounded-xl border">
+                        <select id="inRecur" class="p-3 bg-slate-50 rounded-xl border">
                             <option value="חד פעמי">חד פעמי</option>
                             <option value="יומי">יומי</option>
                         </select>
-                        <input id="inRange" type="text" placeholder="טווח (08:00-10:00)" class="p-3 bg-slate-50 rounded-xl">
-                        <button onclick="addTask()" class="bg-fuchsia-600 text-white font-bold rounded-xl hover:bg-fuchsia-700">הוסף +</button>
+                        <input id="inRange" type="text" placeholder="טווח (08:00-10:00)" class="p-3 bg-slate-50 rounded-xl border">
+                        <button onclick="addTask()" class="bg-fuchsia-600 text-white font-black rounded-xl hover:bg-fuchsia-700 shadow-md">הוסף משימה +</button>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
-                    <table class="w-full text-right border-collapse">
-                        <thead class="bg-slate-50 text-slate-500 text-xs font-bold">
-                            <tr>
-                                <th class="p-4">זמן/טווח</th>
-                                <th class="p-4">משימה</th>
-                                <th class="p-4 text-center">טיימר</th>
-                                <th class="p-4 text-center">פעולות</th>
-                            </tr>
+                <div class="bg-white rounded-3xl shadow-sm overflow-hidden border">
+                    <table class="w-full text-right">
+                        <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            <tr><th class="p-4">זמן/טווח</th><th class="p-4">משימה</th><th class="p-4 text-center">טיימר עבודה</th><th class="p-4 text-center">פעולות</th></tr>
                         </thead>
-                        <tbody id="workerTable" class="divide-y"></tbody>
+                        <tbody id="workerTable" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="sectionAdmin" class="hidden space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-3xl font-black text-purple-900">דוחות ביצועים</h2>
+            <div id="sectionAdmin" class="hidden space-y-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h2 class="text-3xl font-black text-purple-900 tracking-tight">ניהול צוות וביצועים</h2>
                     <div class="flex gap-2 bg-white p-1 rounded-xl shadow-sm border">
                         <button onclick="changePeriod('day')" id="btnDay" class="period-btn active px-4 py-1.5 rounded-lg text-xs font-bold">היום</button>
                         <button onclick="changePeriod('week')" id="btnWeek" class="period-btn px-4 py-1.5 rounded-lg text-xs font-bold">השבוע</button>
@@ -113,12 +113,12 @@
                     </div>
                 </div>
                 
-                <div class="flex gap-3 mb-6">
-                    <button onclick="document.getElementById('xlFile').click()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold">ייבוא מ-CSV</button>
+                <div class="flex gap-3">
+                    <button onclick="document.getElementById('xlFile').click()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm">ייבוא משימות CSV</button>
                     <input type="file" id="xlFile" class="hidden" accept=".csv" onchange="handleFile(this)">
                 </div>
 
-                <div id="adminStats" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <div id="adminStats" class="grid grid-cols-1 gap-8"></div>
             </div>
         </main>
     </div>
@@ -142,7 +142,7 @@
 
         async function handleLogin() {
             const input = document.getElementById('loginUser').value.trim();
-            if(!input) return alert("שם משתמש חובה");
+            if(!input) return alert("נא להזין שם משתמש");
             localStorage.setItem('pro_u', input);
             location.reload();
         }
@@ -163,8 +163,6 @@
         function renderWorkerUI() {
             const todayStr = new Date().toISOString().split('T')[0];
             const tbody = document.getElementById('workerTable');
-            
-            // סינון: משימה שלי, שעדיין לא הושלמה היום (או בכלל)
             const myTasks = allTasks.filter(t => t.worker_name === user);
             
             tbody.innerHTML = myTasks.map(t => {
@@ -173,26 +171,26 @@
                 
                 return `
                     <tr class="${isDone ? 'completed-row' : ''}">
-                        <td class="p-4 font-bold text-purple-700">${timeStr}</td>
+                        <td class="p-4 font-black text-purple-700 text-lg">${timeStr}</td>
                         <td class="p-4">
-                            <div class="font-bold">${t.title}</div>
+                            <div class="font-bold text-slate-800">${t.title}</div>
                             <div class="text-xs text-slate-400">${t.description || ''}</div>
                         </td>
                         <td class="p-4 text-center">
-                            <div id="timer-${t.id}" class="font-mono text-xl ${t.is_running ? 'timer-active' : ''}">
+                            <div id="timer-${t.id}" class="font-mono text-2xl ${t.is_running ? 'timer-active' : 'text-slate-300'}">
                                 ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
                             </div>
                         </td>
                         <td class="p-4 text-center flex justify-center gap-2">
                             ${!isDone ? `
-                                <button onclick="toggleTimer('${t.id}')" class="bg-slate-100 px-3 py-1 rounded-lg text-xs font-bold">
+                                <button onclick="toggleTimer('${t.id}')" class="bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-200">
                                     ${t.is_running ? 'עצור' : 'הפעל'}
                                 </button>
-                                <button onclick="finishTask('${t.id}')" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold">בצע</button>
+                                <button onclick="finishTask('${t.id}')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">סיים משימה</button>
                             ` : `
-                                <button onclick="undoTask('${t.id}')" class="text-slate-400 text-xs">בטל ביצוע</button>
+                                <button onclick="undoTask('${t.id}')" class="text-slate-400 text-xs hover:underline">שחזר משימה ↺</button>
                             `}
-                            <button onclick="openEdit('${t.id}')" class="text-slate-300 px-2">✎</button>
+                            <button onclick="openEdit('${t.id}')" class="text-slate-300 px-3 hover:text-purple-600">✎</button>
                         </td>
                     </tr>
                 `;
@@ -202,10 +200,10 @@
         async function toggleTimer(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
             const now = new Date().toISOString();
-            let update = t.is_running ? 
+            let up = t.is_running ? 
                 { is_running: false, total_seconds: (t.total_seconds || 0) + Math.floor((new Date() - new Date(t.last_start)) / 1000), last_start: null } :
                 { is_running: true, last_start: now };
-            await _s.from('tasks').update(update).eq('id', id);
+            await _s.from('tasks').update(up).eq('id', id);
             sync();
         }
 
@@ -215,19 +213,18 @@
             let sec = t.total_seconds || 0;
             if(t.is_running) sec += Math.floor((new Date() - new Date(t.last_start)) / 1000);
             
-            const update = {
-                is_running: false,
-                last_start: null,
-                total_seconds: sec,
-                last_completed_date: today,
-                status: t.recurrence === 'יומי' ? 'בביצוע' : 'הושלם'
-            };
-            await _s.from('tasks').update(update).eq('id', id);
+            await _s.from('tasks').update({ 
+                is_running: false, 
+                last_start: null, 
+                total_seconds: sec, 
+                last_completed_date: today, 
+                status: t.recurrence === 'יומי' ? 'בביצוע' : 'הושלם' 
+            }).eq('id', id);
             sync();
         }
 
         async function undoTask(id) {
-            await _s.from('tasks').update({ status: 'בביצוע', last_completed_date: null, total_seconds: 0 }).eq('id', id);
+            await _s.from('tasks').update({ status: 'בביצוע', last_completed_date: null, total_seconds: 0, is_running: false }).eq('id', id);
             sync();
         }
 
@@ -235,133 +232,111 @@
             const title = document.getElementById('inTitle').value;
             const target = document.getElementById('inTargetUser').value;
             if(!title) return;
-
             const names = (target === 'כולם') ? [...new Set(allTasks.map(t => t.worker_name))] : [target === 'self' ? user : target];
-            
-            const rows = names.map(n => ({
-                title, worker_name: n,
-                description: document.getElementById('inDesc').value,
-                scheduled_time: document.getElementById('inTime').value || '00:00',
-                hour_range: document.getElementById('inRange').value,
-                recurrence: document.getElementById('inRecur').value,
-                status: 'בביצוע'
+            const rows = names.map(n => ({ 
+                title, worker_name: n, 
+                description: document.getElementById('inDesc').value, 
+                scheduled_time: document.getElementById('inTime').value || '00:00', 
+                hour_range: document.getElementById('inRange').value, 
+                recurrence: document.getElementById('inRecur').value, 
+                status: 'בביצוע' 
             }));
-            
             await _s.from('tasks').insert(rows);
+            document.getElementById('inTitle').value = '';
             sync();
         }
 
+        function changePeriod(p) {
+            currentPeriod = p;
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
+            renderAdminUI();
+        }
+
         function renderAdminUI() {
-    if(!admins.includes(user)) return;
-    const statsDiv = document.getElementById('adminStats');
-    const grouped = {};
-    const now = new Date();
-    
-    // הגדרת תאריך התחלה לפילטרים
-    let filterStart = new Date();
-    if(currentPeriod === 'day') {
-        filterStart.setHours(0,0,0,0);
-    } 
-    else if(currentPeriod === 'week') {
-        filterStart.setDate(now.getDate() - now.getDay());
-        filterStart.setHours(0,0,0,0);
-    } 
-    else if(currentPeriod === 'month') {
-        // הגדרה ספציפית: החודש מתחיל ב-5 לחודש הנוכחי (היום 05/02/2026)
-        filterStart = new Date(now.getFullYear(), now.getMonth(), 5, 0, 0, 0);
-        // אם היום עוד לא ה-5 לחודש, נלך ל-5 לחודש הקודם
-        if (now < filterStart) {
-            filterStart.setMonth(filterStart.getMonth() - 1);
-        }
-    }
-
-    const startOfToday = new Date();
-    startOfToday.setHours(0,0,0,0);
-
-    allTasks.forEach(t => {
-        if(!t.worker_name) return;
-        if(!grouped[t.worker_name]) {
-            grouped[t.worker_name] = { 
-                totalTasksInPeriod: 0, 
-                doneInPeriod: 0, 
-                timeInPeriod: 0,
-                timeToday: 0 
-            };
-        }
-
-        const compDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
-        
-        // ספירה לתקופה הנבחרת
-        grouped[t.worker_name].totalTasksInPeriod++;
-        if(compDate && compDate >= filterStart) {
-            grouped[t.worker_name].doneInPeriod++;
-            grouped[t.worker_name].timeInPeriod += (t.total_seconds || 0);
-        }
-
-        // חישוב זמן עבודה להיום בלבד
-        if(compDate && compDate >= startOfToday) {
-            grouped[t.worker_name].timeToday += (t.total_seconds || 0);
-        } else if (t.is_running && t.worker_name === user) {
-            const sessionToday = Math.floor((new Date() - new Date(t.last_start)) / 1000);
-            grouped[t.worker_name].timeToday += (t.total_seconds || 0) + sessionToday;
-        }
-    });
-
-    statsDiv.innerHTML = Object.entries(grouped).map(([name, data]) => {
-        const percent = Math.round((data.doneInPeriod / data.totalTasksInPeriod) * 100 || 0);
-        const periodLabel = currentPeriod === 'month' ? "מה-5 לחודש" : (currentPeriod === 'week' ? "השבוע" : "היום");
-
-        return `
-            <div class="bg-white p-6 rounded-3xl shadow-sm border-r-4 border-purple-600">
-                <h4 class="text-xl font-black mb-2">${name}</h4>
-                <div class="text-3xl font-bold text-fuchsia-600 mb-1">${percent}%</div>
-                <div class="text-xs font-bold text-slate-400 mb-4">ביצוע ${periodLabel}: ${data.doneInPeriod}/${data.totalTasksInPeriod}</div>
-                
-                <div class="space-y-2 pt-4 border-t">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500 font-bold">זמן עבודה היום:</span>
-                        <span class="text-purple-900 font-black">${Math.floor(data.timeToday / 60)} דקות</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500 font-bold">סה"כ לתקופה:</span>
-                        <span class="text-slate-700 font-bold">${Math.floor(data.timeInPeriod / 60)} דקות</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+            if(!admins.includes(user)) return;
+            const statsDiv = document.getElementById('adminStats');
+            const workers = {};
             const now = new Date();
-            let start = new Date();
-            if(currentPeriod === 'day') start.setHours(0,0,0,0);
-            else if(currentPeriod === 'week') start.setDate(now.getDate() - now.getDay());
-            else if(currentPeriod === 'month') start.setDate(1);
-            start.setHours(0,0,0,0);
+            const todayStr = now.toISOString().split('T')[0];
+            
+            let filterStart = new Date();
+            if(currentPeriod === 'day') {
+                filterStart.setHours(0,0,0,0);
+            } else if(currentPeriod === 'week') {
+                filterStart.setDate(now.getDate() - now.getDay());
+                filterStart.setHours(0,0,0,0);
+            } else if(currentPeriod === 'month') {
+                // לוגיקה מיוחדת: פברואר 2026 מה-5, אחרת מה-1 לחודש
+                if(now.getMonth() === 1 && now.getFullYear() === 2026) {
+                    filterStart = new Date(2026, 1, 5, 0, 0, 0);
+                } else {
+                    filterStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+                }
+            }
 
             allTasks.forEach(t => {
-                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0 };
-                grouped[t.worker_name].total++;
+                if(!t.worker_name) return;
+                if(!workers[t.worker_name]) workers[t.worker_name] = { tasks: [], stats: { total: 0, done: 0, timeToday: 0, timePeriod: 0 } };
+                workers[t.worker_name].tasks.push(t);
                 
                 const compDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
-                if(compDate && compDate >= start) {
-                    grouped[t.worker_name].done++;
-                    grouped[t.worker_name].time += (t.total_seconds || 0);
+                workers[t.worker_name].stats.total++;
+                
+                // חישוב ביצוע לתקופה
+                if(compDate && compDate >= filterStart) {
+                    workers[t.worker_name].stats.done++;
+                    workers[t.worker_name].stats.timePeriod += (t.total_seconds || 0);
+                }
+
+                // חישוב זמן עבודה להיום (כולל טיימר רץ)
+                if(t.last_completed_date === todayStr) {
+                    workers[t.worker_name].stats.timeToday += (t.total_seconds || 0);
+                } else if(t.is_running) {
+                    const extra = Math.floor((new Date() - new Date(t.last_start)) / 1000);
+                    workers[t.worker_name].stats.timeToday += (t.total_seconds || 0) + extra;
                 }
             });
 
-            statsDiv.innerHTML = Object.entries(grouped).map(([name, data]) => `
-                <div class="bg-white p-6 rounded-3xl shadow-sm border-r-4 border-purple-600">
-                    <h4 class="text-xl font-black mb-2">${name}</h4>
-                    <div class="text-3xl font-bold text-purple-600 mb-1">${Math.round((data.done/data.total)*100 || 0)}%</div>
-                    <div class="text-xs font-bold text-slate-400">בוצעו: ${data.done} מתוך ${data.total}</div>
-                    <div class="mt-4 pt-4 border-t text-sm font-bold text-slate-600">
-                        זמן עבודה: ${Math.floor(data.time/60)} דקות
+            statsDiv.innerHTML = Object.entries(workers).map(([name, data]) => `
+                <div class="bg-white rounded-[2rem] shadow-md border border-slate-100 overflow-hidden">
+                    <div class="bg-purple-900 p-6 text-white flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-black">${name}</h3>
+                            <div class="flex gap-4 mt-1">
+                                <span class="text-purple-200 text-xs font-bold">זמן עבודה היום: ${Math.floor(data.stats.timeToday/60)} דקות</span>
+                                <span class="text-fuchsia-300 text-xs font-bold">ביצוע תקופתי: ${Math.round((data.stats.done/data.stats.total)*100 || 0)}%</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-black">${data.stats.done}/${data.stats.total}</div>
+                            <div class="text-[10px] opacity-70 font-bold uppercase tracking-widest">משימות שבוצעו</div>
+                        </div>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50/50">
+                        ${data.tasks.map(t => {
+                            const isDone = t.status === 'הושלם' || t.last_completed_date === todayStr;
+                            return `
+                            <div class="admin-task-card ${t.is_running ? 'running' : ''} bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-slate-100">
+                                <div class="max-w-[150px]">
+                                    <div class="font-bold text-sm truncate ${isDone ? 'line-through text-slate-300' : 'text-slate-800'}">${t.title}</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">${t.hour_range || t.scheduled_time || 'ללא שעה'}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div id="admin-timer-${t.id}" class="font-mono text-sm ${t.is_running ? 'text-rose-600 font-black' : 'text-slate-400'}">
+                                        ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
+                                    </div>
+                                    <div class="text-[9px] font-black uppercase ${isDone ? 'text-emerald-500' : (t.is_running ? 'text-rose-500' : 'text-amber-500')}">
+                                        ${isDone ? 'הושלם' : (t.is_running ? 'בעבודה...' : 'ממתין')}
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('')}
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- עריכה וייבוא ---
         function openEdit(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
             document.getElementById('editId').value = t.id;
@@ -374,54 +349,45 @@
         }
 
         async function saveEdit() {
-            const id = document.getElementById('editId').value;
-            await _s.from('tasks').update({
-                title: document.getElementById('editTitle').value,
-                description: document.getElementById('editDesc').value,
-                hour_range: document.getElementById('editRange').value,
-                scheduled_time: document.getElementById('editTime').value,
-                recurrence: document.getElementById('editRecur').value
-            }).eq('id', id);
+            await _s.from('tasks').update({ 
+                title: document.getElementById('editTitle').value, 
+                description: document.getElementById('editDesc').value, 
+                hour_range: document.getElementById('editRange').value, 
+                scheduled_time: document.getElementById('editTime').value, 
+                recurrence: document.getElementById('editRecur').value 
+            }).eq('id', document.getElementById('editId').value);
             closeEdit(); sync();
         }
 
         function handleFile(input) {
-            Papa.parse(input.files[0], {
-                header: true,
-                complete: async (results) => {
-                    const data = results.data.filter(r => r.title).map(r => ({
-                        title: r.title,
-                        worker_name: r.worker_name || user,
-                        description: r.description || '',
-                        scheduled_time: r.scheduled_time || '00:00',
-                        hour_range: r.hour_range || '',
-                        recurrence: r.recurrence || 'חד פעמי',
-                        status: 'בביצוע'
-                    }));
-                    await _s.from('tasks').insert(data);
-                    sync();
-                }
-            });
+            Papa.parse(input.files[0], { header: true, complete: async (r) => {
+                const data = r.data.filter(x => x.title).map(x => ({ 
+                    title: x.title, 
+                    worker_name: x.worker_name || user, 
+                    description: x.description || '', 
+                    scheduled_time: x.scheduled_time || '00:00', 
+                    hour_range: x.hour_range || '', 
+                    recurrence: x.recurrence || 'חד פעמי', 
+                    status: 'בביצוע' 
+                }));
+                await _s.from('tasks').insert(data); 
+                sync();
+            }});
         }
 
-        function formatTime(total, lastStart) {
-            let sec = total || 0;
-            if(lastStart) sec += Math.floor((new Date() - new Date(lastStart)) / 1000);
-            const h = Math.floor(sec / 3600).toString().padStart(2, '0');
-            const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
-            const s = (sec % 60).toString().padStart(2, '0');
-            return `${h}:${m}:${s}`;
+        function formatTime(tot, start) {
+            let s = tot || 0; if(start) s += Math.floor((new Date() - new Date(start)) / 1000);
+            const h = Math.floor(s/3600).toString().padStart(2,'0'), m = Math.floor((s%3600)/60).toString().padStart(2,'0'), sec = (s%60).toString().padStart(2,'0');
+            return `${h}:${m}:${sec}`;
         }
-
         function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
         function switchTab(t) {
             const isT = t === 'tasks';
             document.getElementById('sectionTasks').classList.toggle('hidden', !isT);
             document.getElementById('sectionAdmin').classList.toggle('hidden', isT);
-            document.getElementById('tBtn').classList.toggle('bg-white', isT);
-            document.getElementById('tBtn').classList.toggle('shadow-sm', isT);
-            document.getElementById('aBtn').classList.toggle('bg-white', !isT);
-            document.getElementById('aBtn').classList.toggle('shadow-sm', !isT);
+            document.getElementById('tBtn').className = isT ? "px-4 py-1 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700" : "px-4 py-1 rounded-md text-sm font-bold text-slate-500";
+            document.getElementById('aBtn').className = !isT ? "px-4 py-1 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700" : "px-4 py-1 rounded-md text-sm font-bold text-slate-500";
+            if(!isT) renderAdminUI();
         }
         function updateUserList() {
             const users = [...new Set(allTasks.map(t => t.worker_name))].filter(u => u);
@@ -432,8 +398,8 @@
         function logout() { localStorage.clear(); location.reload(); }
         
         setInterval(() => {
-            document.querySelectorAll('[id^="timer-"]').forEach(el => {
-                const id = el.id.replace('timer-', '');
+            document.querySelectorAll('[id^="timer-"], [id^="admin-timer-"]').forEach(el => {
+                const id = el.id.replace('timer-', '').replace('admin-', '');
                 const t = allTasks.find(x => String(x.id) === id);
                 if(t && t.is_running) el.innerText = formatTime(t.total_seconds, t.last_start);
             });
