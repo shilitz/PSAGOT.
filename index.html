@@ -3,37 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>פסגות | ProTrack v2.0 Official</title>
+    <title>פסגות | ProTrack v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
-        body { font-family: 'Assistant', sans-serif; background: #f8fafc; text-align: right; margin: 0; overflow-x: hidden; }
+        :root {
+            --psagot-purple: #4e1d4e;
+            --psagot-magenta: #c12080;
+        }
+        body { font-family: 'Assistant', sans-serif; background: #fdf2f8; text-align: right; margin: 0; }
         
-        #loginOverlay { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #4c1d95 0%, #701a75 100%); display: flex; align-items: center; justify-content: center; }
+        #loginOverlay { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, var(--psagot-purple) 0%, #701a75 100%); display: flex; align-items: center; justify-content: center; }
         .login-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 3rem; border-radius: 2rem; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.2); }
 
         .modal { display: none; position: fixed; z-index: 100; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal.open { display: flex; }
         
-        .timer-active { color: #f43f5e; font-weight: 900; animation: pulse 2s infinite; }
+        .timer-active { color: var(--psagot-magenta); font-weight: 900; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        .completed-row { opacity: 0.5; background-color: #f1f5f9; text-decoration: line-through; border-right: 4px solid #cbd5e1 !important; }
-        .period-btn.active { background: #701a75; color: white; }
-        .admin-task-card { border-right: 4px solid #e2e8f0; transition: all 0.2s; }
-        .admin-task-card.running { border-right-color: #f43f5e; background: #fff1f2; }
+        .completed-row { opacity: 0.6; background-color: #f1f5f9; text-decoration: line-through; border-right: 4px solid #cbd5e1 !important; }
+        .period-btn.active { background: var(--psagot-purple); color: white; }
+        
+        .psagot-logo-container { height: 50px; display: flex; align-items: center; }
+        .psagot-logo-container img { height: 100%; object-fit: contain; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="loginOverlay">
-        <div class="login-card">
-            <h2 class="text-white text-4xl font-black mb-2 italic">פסגות</h2>
-            <div class="text-fuchsia-400 font-bold tracking-[0.2em] mb-8 text-sm uppercase">PRO TRACK</div>
-            <input id="loginUser" type="text" placeholder="הכנס שם משתמש" class="w-full p-4 rounded-xl mb-4 text-center outline-none bg-white/90 focus:bg-white transition-all">
-            <button onclick="handleLogin()" class="w-full bg-fuchsia-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-fuchsia-700 active:scale-95 transition-all">כניסה למערכת</button>
+        <div class="login-card text-white">
+            <img src="https://ytcthmwkmvajmfegnqas.supabase.co/storage/v1/object/public/general/Psagot_Logo.png" alt="פסגות" class="h-20 mx-auto mb-6 brightness-0 invert">
+            <h2 class="text-2xl font-black mb-6 italic uppercase tracking-widest">מערכת ProTrack</h2>
+            <input id="loginUser" type="text" placeholder="הכנס שם משתמש" class="w-full p-4 rounded-xl mb-4 text-center outline-none text-slate-800 bg-white shadow-inner">
+            <button onclick="handleLogin()" class="w-full bg-magenta-600 bg-[#c12080] text-white font-bold py-4 rounded-xl shadow-lg hover:scale-105 transition-all">כניסה</button>
         </div>
     </div>
 
@@ -43,44 +48,43 @@
                 <h3 class="text-2xl font-black mb-6 text-purple-900">עריכת משימה</h3>
                 <input id="editId" type="hidden">
                 <div class="space-y-4">
-                    <div><label class="text-xs font-bold text-slate-500">כותרת המשימה</label><input id="editTitle" type="text" class="w-full p-3 border rounded-xl outline-none text-right"></div>
-                    <div><label class="text-xs font-bold text-slate-500">תיאור</label><input id="editDesc" type="text" class="w-full p-3 border rounded-xl outline-none text-right"></div>
-                    <div><label class="text-xs font-bold text-slate-500">טווח שעות</label><input id="editRange" type="text" class="w-full p-3 border rounded-xl outline-none text-right"></div>
+                    <input id="editTitle" type="text" class="w-full p-3 border rounded-xl outline-none" placeholder="שם המשימה">
+                    <input id="editDesc" type="text" class="w-full p-3 border rounded-xl outline-none" placeholder="תיאור">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-xs font-bold text-slate-500">שעת יעד</label><input id="editTime" type="time" class="p-3 border rounded-xl w-full"></div>
-                        <div><label class="text-xs font-bold text-slate-500">מחזוריות</label>
-                            <select id="editRecur" class="p-3 border rounded-xl w-full">
-                                <option value="חד פעמי">חד פעמי</option>
-                                <option value="יומי">יומי</option>
-                            </select>
-                        </div>
+                        <input id="editTime" type="time" class="p-3 border rounded-xl w-full">
+                        <select id="editRecur" class="p-3 border rounded-xl w-full">
+                            <option value="חד פעמי">חד פעמי</option>
+                            <option value="יומי">יומי</option>
+                        </select>
                     </div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button onclick="saveEdit()" class="flex-1 bg-fuchsia-600 text-white py-3 rounded-xl font-bold">שמור</button>
+                    <button onclick="saveEdit()" class="flex-1 bg-[#c12080] text-white py-3 rounded-xl font-bold">שמור</button>
                     <button onclick="closeEdit()" class="flex-1 bg-slate-200 py-3 rounded-xl">ביטול</button>
                 </div>
             </div>
         </div>
 
-        <nav class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-50">
-            <div class="flex gap-4 items-center">
-                <div class="text-2xl font-black italic text-purple-900 border-l-4 border-fuchsia-600 pl-4 ml-2">פסגות</div>
-                <span id="userNameDisplay" class="font-bold text-slate-500 border-l pl-4 ml-2"></span>
+        <nav class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-50">
+            <div class="flex gap-6 items-center">
+                <div class="psagot-logo-container">
+                    <img src="https://ytcthmwkmvajmfegnqas.supabase.co/storage/v1/object/public/general/Psagot_Logo.png" alt="פסגות">
+                </div>
+                <span id="userNameDisplay" class="font-bold text-[#4e1d4e] border-r-2 pr-4 mr-2"></span>
                 <div class="bg-slate-100 p-1 rounded-lg flex gap-1">
-                    <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700 transition-all">משימות</button>
-                    <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 transition-all">דוחות וניהול</button>
+                    <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700">משימות</button>
+                    <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1.5 rounded-md text-sm font-bold text-slate-500">ניהול ודוחות</button>
                 </div>
             </div>
-            <button onclick="logout()" class="text-rose-500 text-[10px] font-bold uppercase tracking-tighter hover:text-rose-700">יציאה (X)</button>
+            <button onclick="logout()" class="text-rose-500 text-xs font-bold hover:underline">יציאה</button>
         </nav>
 
-        <main class="p-6 max-w-6xl mx-auto">
+        <main class="p-6 max-w-7xl mx-auto">
             <div id="sectionTasks" class="space-y-6">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border-t-4 border-[#c12080]">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <input id="inTitle" type="text" placeholder="שם המשימה..." class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500 transition-colors text-right">
-                        <input id="inDesc" type="text" placeholder="תיאור / הערות" class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-fuchsia-500 transition-colors text-right">
+                        <input id="inTitle" type="text" placeholder="מה המשימה?" class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-[#c12080] text-right">
+                        <input id="inDesc" type="text" placeholder="הערות נוספות" class="p-4 bg-slate-50 rounded-2xl outline-none border focus:border-[#c12080] text-right">
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <select id="inTargetUser" class="p-3 bg-slate-50 rounded-xl font-bold outline-none border"></select>
@@ -90,14 +94,14 @@
                             <option value="יומי">יומי</option>
                         </select>
                         <input id="inRange" type="text" placeholder="טווח שעות" class="p-3 bg-slate-50 rounded-xl border text-right">
-                        <button onclick="addTask()" class="bg-fuchsia-600 text-white font-black rounded-xl hover:bg-fuchsia-700 shadow-md transition-all">הוסף +</button>
+                        <button onclick="addTask()" class="bg-[#4e1d4e] text-white font-black rounded-xl hover:bg-black transition-all">הוסף +</button>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-sm overflow-hidden border">
-                    <table class="w-full text-right border-collapse">
-                        <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                            <tr><th class="p-4">שעה / טווח</th><th class="p-4">משימה</th><th class="p-4 text-center">טיימר</th><th class="p-4 text-center">פעולות</th></tr>
+                <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-slate-200">
+                    <table class="w-full text-right">
+                        <thead class="bg-slate-50 text-[#4e1d4e] text-xs font-black border-b">
+                            <tr><th class="p-4">זמן/טווח</th><th class="p-4">משימה</th><th class="p-4 text-center">טיימר</th><th class="p-4 text-center">פעולות</th></tr>
                         </thead>
                         <tbody id="workerTable" class="divide-y divide-slate-100"></tbody>
                     </table>
@@ -105,24 +109,25 @@
             </div>
 
             <div id="sectionAdmin" class="hidden space-y-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6 text-right">
+                <div class="flex justify-between items-end border-b pb-6">
                     <div>
-                        <h2 class="text-3xl font-black text-purple-900 tracking-tight italic">פסגות | דוחות ביצועים</h2>
-                        <p class="text-slate-400 text-sm font-bold">מעקב משימות וזמני עבודה בצוות</p>
+                        <h2 class="text-3xl font-black text-[#4e1d4e] italic">דוחות ניהול</h2>
+                        <p class="text-slate-500 font-bold">מעקב ביצועים בזמן אמת</p>
                     </div>
-                    <div class="flex gap-2 bg-slate-100 p-1 rounded-xl border">
-                        <button onclick="changePeriod('day')" id="btnDay" class="period-btn active px-4 py-2 rounded-lg text-xs font-bold transition-all">היום</button>
-                        <button onclick="changePeriod('week')" id="btnWeek" class="period-btn px-4 py-2 rounded-lg text-xs font-bold transition-all">השבוע</button>
-                        <button onclick="changePeriod('month')" id="btnMonth" class="period-btn px-4 py-2 rounded-lg text-xs font-bold transition-all">החודש (מה-5)</button>
+                    <div class="flex flex-col items-end gap-3">
+                        <div class="bg-slate-100 p-1 rounded-xl flex border">
+                            <button onclick="changePeriod('day')" id="btnDay" class="period-btn active px-4 py-2 rounded-lg text-xs font-bold transition-all">היום</button>
+                            <button onclick="changePeriod('week')" id="btnWeek" class="period-btn px-4 py-2 rounded-lg text-xs font-bold transition-all">השבוע</button>
+                            <button onclick="changePeriod('month')" id="btnMonth" class="period-btn px-4 py-2 rounded-lg text-xs font-bold transition-all">החודש</button>
+                        </div>
+                        <div class="flex gap-2">
+                             <input id="adminListInput" type="text" placeholder="שמות מנהלים (מופרדים בפסיק)" class="p-2 border rounded-lg text-xs w-64 outline-none focus:border-[#c12080]">
+                             <button onclick="updateAdminsList()" class="bg-[#4e1d4e] text-white px-4 py-2 rounded-lg text-xs font-bold">עדכן מנהלים</button>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="flex gap-3">
-                    <button onclick="document.getElementById('xlFile').click()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all">ייבוא מ-CSV</button>
-                    <input type="file" id="xlFile" class="hidden" accept=".csv" onchange="handleFile(this)">
-                </div>
-
-                <div id="adminStats" class="grid grid-cols-1 gap-10"></div>
+                <div id="adminStats" class="grid grid-cols-1 gap-8"></div>
             </div>
         </main>
     </div>
@@ -140,82 +145,117 @@
         if(user) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContent').classList.remove('hidden');
-            document.getElementById('userNameDisplay').innerText = user;
+            document.getElementById('userNameDisplay').innerText = `שלום, ${user}`;
             sync();
         }
 
         async function handleLogin() {
             const input = document.getElementById('loginUser').value.trim();
-            if(!input) return alert("שם משתמש לא יכול להיות ריק");
+            if(!input) return;
             localStorage.setItem('pro_u', input);
             location.reload();
         }
 
         async function sync() {
-            try {
-                const { data: tasks, error: taskError } = await _s.from('tasks').select('*').order('scheduled_time', { ascending: true });
-                if(taskError) throw taskError;
-                allTasks = tasks || [];
-                
-                const { data: set } = await _s.from('settings').select('*').eq('key', 'admin_users');
-                if(set && set[0]) admins = set[0].value;
-                
-                const isAdmin = admins.map(a => a.trim()).includes(user.trim());
-                document.getElementById('aBtn').classList.toggle('hidden', !isAdmin);
-                
-                updateUserList();
-                renderWorkerUI();
-                if(isAdmin) renderAdminUI();
-            } catch (err) {
-                console.error("Sync error:", err);
-                renderWorkerUI();
+            const { data: tasks } = await _s.from('tasks').select('*').order('scheduled_time', { ascending: true });
+            allTasks = tasks || [];
+            
+            const { data: set } = await _s.from('settings').select('*').eq('key', 'admin_users');
+            if(set && set[0]) {
+                admins = set[0].value;
+                document.getElementById('adminListInput').value = admins.join(', ');
             }
+            
+            const isAdmin = admins.map(a => a.trim()).includes(user.trim());
+            document.getElementById('aBtn').classList.toggle('hidden', !isAdmin);
+            
+            updateUserList();
+            renderWorkerUI();
+            if(isAdmin) renderAdminUI();
+        }
+
+        async function updateAdminsList() {
+            const newList = document.getElementById('adminListInput').value.split(',').map(s => s.trim());
+            await _s.from('settings').upsert({ key: 'admin_users', value: newList }, { onConflict: 'key' });
+            alert("רשימת המנהלים עודכנה");
+            location.reload();
         }
 
         function renderWorkerUI() {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split('T')[0];
             const tbody = document.getElementById('workerTable');
             const myTasks = allTasks.filter(t => t.worker_name === user);
             
-            // לוגיקה: משימות שלא הושלמו למעלה, משימות שהושלמו למטה
-            const active = myTasks.filter(t => t.status !== 'הושלם' && t.last_completed_date !== todayStr);
-            const done = myTasks.filter(t => t.status === 'הושלם' || t.last_completed_date === todayStr);
+            // הפרדה: פעילות למעלה, גמורות למטה
+            const active = myTasks.filter(t => t.status !== 'הושלם' && t.last_completed_date !== today);
+            const done = myTasks.filter(t => t.status === 'הושלם' || t.last_completed_date === today);
             const sorted = [...active, ...done];
 
-            if(sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold">אין משימות להצגה. הוסף משימה חדשה למעלה.</td></tr>`;
-                return;
-            }
-
             tbody.innerHTML = sorted.map(t => {
-                const isDone = (t.status === 'הושלם') || (t.last_completed_date === todayStr);
-                const timeStr = t.hour_range || (t.scheduled_time ? t.scheduled_time.slice(0,5) : '--:--');
-                
+                const isDone = (t.status === 'הושלם') || (t.last_completed_date === today);
                 return `
-                    <tr class="${isDone ? 'completed-row' : ''} hover:bg-slate-50 transition-colors">
-                        <td class="p-4 font-black text-purple-700 text-lg">${timeStr}</td>
+                    <tr class="${isDone ? 'completed-row' : ''}">
+                        <td class="p-4 font-black text-[#4e1d4e]">${t.hour_range || t.scheduled_time?.slice(0,5) || '--:--'}</td>
                         <td class="p-4">
                             <div class="font-bold text-slate-800">${t.title}</div>
-                            <div class="text-[11px] text-slate-400 font-bold">${t.description || ''}</div>
+                            <div class="text-[10px] text-slate-400 font-bold">${t.description || ''}</div>
                         </td>
                         <td class="p-4 text-center">
-                            <div id="timer-${t.id}" class="font-mono text-2xl ${t.is_running ? 'timer-active' : 'text-slate-300'}">
+                            <div id="timer-${t.id}" class="font-mono text-xl ${t.is_running ? 'timer-active' : 'text-slate-300'}">
                                 ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
                             </div>
                         </td>
-                        <td class="p-4 text-center flex justify-center gap-2 items-center">
+                        <td class="p-4 text-center flex justify-center gap-2">
                             ${!isDone ? `
-                                <button onclick="toggleTimer('${t.id}')" class="bg-slate-100 px-4 py-2 rounded-xl text-xs font-black hover:bg-slate-200 transition-all">
-                                    ${t.is_running ? 'עצור' : 'הפעל'}
-                                </button>
-                                <button onclick="finishTask('${t.id}')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow-md hover:bg-emerald-700 transition-all">בוצע</button>
+                                <button onclick="toggleTimer('${t.id}')" class="bg-slate-100 px-4 py-2 rounded-xl text-[10px] font-black">${t.is_running ? 'עצור' : 'הפעל'}</button>
+                                <button onclick="finishTask('${t.id}')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black">בוצע</button>
                             ` : `
-                                <button onclick="undoTask('${t.id}')" class="bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-black shadow-sm">שחזור ↺</button>
+                                <button onclick="undoTask('${t.id}')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px]">שחזור ↺</button>
                             `}
-                            <button onclick="openEdit('${t.id}')" class="text-slate-300 px-3 hover:text-purple-600 transition-colors">✎</button>
+                            <button onclick="openEdit('${t.id}')" class="text-slate-300 px-2 hover:text-purple-600">✎</button>
                         </td>
-                    </tr>
-                `;
+                    </tr>`;
+            }).join('');
+        }
+
+        function renderAdminUI() {
+            const statsDiv = document.getElementById('adminStats');
+            const workers = {};
+            const today = new Date().toISOString().split('T')[0];
+            
+            allTasks.forEach(t => {
+                if(!t.worker_name) return;
+                if(!workers[t.worker_name]) workers[t.worker_name] = [];
+                workers[t.worker_name].push(t);
+            });
+
+            statsDiv.innerHTML = Object.entries(workers).map(([name, tasks]) => {
+                const active = tasks.filter(t => t.last_completed_date !== today && t.status !== 'הושלם');
+                const done = tasks.filter(t => t.last_completed_date === today || t.status === 'הושלם');
+                const sorted = [...active, ...done];
+
+                return `
+                <div class="bg-white rounded-[2rem] shadow-sm overflow-hidden border">
+                    <div class="bg-[#4e1d4e] p-5 text-white flex justify-between items-center">
+                        <h3 class="text-xl font-black italic">${name}</h3>
+                        <div class="text-xs opacity-80">משימות פעילות: ${active.length}</div>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${sorted.map(t => {
+                            const isDone = t.status === 'הושלם' || t.last_completed_date === today;
+                            return `
+                            <div class="bg-slate-50 p-3 rounded-xl border flex justify-between items-center ${isDone ? 'opacity-40' : ''}">
+                                <div>
+                                    <div class="font-bold text-xs ${isDone ? 'line-through' : ''}">${t.title}</div>
+                                    <div class="text-[9px] text-slate-400">${t.hour_range || ''}</div>
+                                </div>
+                                <div id="admin-timer-${t.id}" class="font-mono text-xs ${t.is_running ? 'text-rose-600 font-bold' : 'text-slate-300'}">
+                                    ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
             }).join('');
         }
 
@@ -256,78 +296,7 @@
             }));
             await _s.from('tasks').insert(rows);
             document.getElementById('inTitle').value = '';
-            document.getElementById('inDesc').value = '';
             sync();
-        }
-
-        function renderAdminUI() {
-            const statsDiv = document.getElementById('adminStats');
-            const workers = {};
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            
-            let filterStart = new Date();
-            if(currentPeriod === 'day') filterStart.setHours(0,0,0,0);
-            else if(currentPeriod === 'week') { filterStart.setDate(now.getDate() - now.getDay()); filterStart.setHours(0,0,0,0); }
-            else if(currentPeriod === 'month') {
-                if(now.getMonth() === 1 && now.getFullYear() === 2026) filterStart = new Date(2026, 1, 5, 0, 0, 0);
-                else filterStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-            }
-
-            allTasks.forEach(t => {
-                if(!t.worker_name) return;
-                if(!workers[t.worker_name]) workers[t.worker_name] = { tasks: [], stats: { total: 0, done: 0, timeToday: 0 } };
-                workers[t.worker_name].tasks.push(t);
-                const compDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
-                workers[t.worker_name].stats.total++;
-                if(compDate && compDate >= filterStart) workers[t.worker_name].stats.done++;
-                if(t.last_completed_date === todayStr) workers[t.worker_name].stats.timeToday += (t.total_seconds || 0);
-                else if(t.is_running) {
-                    const extra = Math.floor((new Date() - new Date(t.last_start)) / 1000);
-                    workers[t.worker_name].stats.timeToday += (t.total_seconds || 0) + extra;
-                }
-            });
-
-            statsDiv.innerHTML = Object.entries(workers).map(([name, data]) => {
-                // אצל המנהל: משימות שבוצעו היום עוברות לתחתית הרשימה של אותו עובד
-                const active = data.tasks.filter(t => t.last_completed_date !== todayStr && t.status !== 'הושלם');
-                const done = data.tasks.filter(t => t.last_completed_date === todayStr || t.status === 'הושלם');
-                const sorted = [...active, ...done];
-
-                return `
-                <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden text-right">
-                    <div class="bg-purple-900 p-6 text-white flex justify-between items-center">
-                        <div>
-                            <h3 class="text-2xl font-black italic tracking-tighter">${name}</h3>
-                            <div class="flex gap-4 mt-2">
-                                <div class="bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold">זמן היום: ${Math.floor(data.stats.timeToday/60)} דקות</div>
-                                <div class="bg-fuchsia-500/20 px-3 py-1 rounded-full text-[10px] font-bold text-fuchsia-300">ביצוע: ${Math.round((data.stats.done/data.stats.total)*100 || 0)}%</div>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-3xl font-black">${data.stats.done}<span class="text-purple-400 text-lg">/${data.stats.total}</span></div>
-                        </div>
-                    </div>
-                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50/50">
-                        ${sorted.map(t => {
-                            const isDone = t.status === 'הושלם' || t.last_completed_date === todayStr;
-                            return `
-                            <div class="admin-task-card ${t.is_running ? 'running' : ''} bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-slate-100 ${isDone ? 'opacity-50' : ''}">
-                                <div class="overflow-hidden">
-                                    <div class="font-bold text-sm truncate ${isDone ? 'line-through text-slate-300' : 'text-slate-800'}">${t.title}</div>
-                                    <div class="text-[10px] text-slate-400 font-bold">${t.hour_range || ''}</div>
-                                </div>
-                                <div class="text-right flex flex-col items-end">
-                                    <div id="admin-timer-${t.id}" class="font-mono text-sm ${t.is_running ? 'text-rose-600 font-black' : 'text-slate-300'}">${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}</div>
-                                    <div class="text-[8px] font-black uppercase px-2 py-0.5 rounded-full mt-1 ${isDone ? 'bg-emerald-100 text-emerald-600' : (t.is_running ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400')}">
-                                        ${isDone ? 'DONE' : (t.is_running ? 'LIVE' : 'WAIT')}
-                                    </div>
-                                </div>
-                            </div>`;
-                        }).join('')}
-                    </div>
-                </div>`;
-            }).join('');
         }
 
         function formatTime(tot, start) {
@@ -341,13 +310,12 @@
             document.getElementById('editId').value = t.id;
             document.getElementById('editTitle').value = t.title;
             document.getElementById('editDesc').value = t.description || '';
-            document.getElementById('editRange').value = t.hour_range || '';
             document.getElementById('editTime').value = t.scheduled_time || '00:00';
             document.getElementById('editRecur').value = t.recurrence;
             document.getElementById('editModal').classList.add('open');
         }
         async function saveEdit() {
-            await _s.from('tasks').update({ title: document.getElementById('editTitle').value, description: document.getElementById('editDesc').value, hour_range: document.getElementById('editRange').value, scheduled_time: document.getElementById('editTime').value, recurrence: document.getElementById('editRecur').value }).eq('id', document.getElementById('editId').value);
+            await _s.from('tasks').update({ title: document.getElementById('editTitle').value, description: document.getElementById('editDesc').value, scheduled_time: document.getElementById('editTime').value, recurrence: document.getElementById('editRecur').value }).eq('id', document.getElementById('editId').value);
             closeEdit(); sync();
         }
         function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
@@ -357,7 +325,6 @@
             document.getElementById('sectionAdmin').classList.toggle('hidden', isT);
             document.getElementById('tBtn').className = isT ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700" : "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500";
             document.getElementById('aBtn').className = !isT ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-purple-700" : "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500";
-            if(!isT) renderAdminUI();
         }
         function updateUserList() {
             const users = [...new Set(allTasks.map(t => t.worker_name))].filter(u => u);
@@ -367,12 +334,7 @@
         }
         function changePeriod(p) { currentPeriod = p; renderAdminUI(); }
         function logout() { localStorage.clear(); location.reload(); }
-        function handleFile(input) {
-            Papa.parse(input.files[0], { header: true, complete: async (r) => {
-                const data = r.data.filter(x => x.title).map(x => ({ title: x.title, worker_name: x.worker_name || user, description: x.description || '', scheduled_time: x.scheduled_time || '00:00', hour_range: x.hour_range || '', recurrence: x.recurrence || 'חד פעמי', status: 'בביצוע' }));
-                await _s.from('tasks').insert(data); sync();
-            }});
-        }
+        
         setInterval(() => {
             document.querySelectorAll('[id^="timer-"], [id^="admin-timer-"]').forEach(el => {
                 const id = el.id.replace('timer-', '').replace('admin-', '');
