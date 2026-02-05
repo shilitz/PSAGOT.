@@ -69,9 +69,8 @@
                 <h3 class="text-2xl font-black mb-6 text-purple-900">עריכת משימה</h3>
                 <input id="editId" type="hidden">
                 <div class="space-y-4">
-                    <div><label class="text-xs font-bold text-slate-500">כותרת</label><input id="editTitle" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
-                    <div><label class="text-xs font-bold text-slate-500">תיאור</label><input id="editDesc" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
-                    <div><label class="text-xs font-bold text-slate-500">טווח שעות (למשל 08:00-10:00)</label><input id="editRange" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
+                    <div><label class="text-xs font-bold text-slate-500">כותרת</label><input id="editTitle" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-purple-200"></div>
+                    <div><label class="text-xs font-bold text-slate-500">תיאור</label><input id="editDesc" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-purple-200"></div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="text-xs font-bold text-slate-500">זמן יעד</label><input id="editTime" type="time" class="w-full p-3 bg-slate-50 border rounded-xl"></div>
                         <div><label class="text-xs font-bold text-slate-500">מחזוריות</label>
@@ -84,9 +83,31 @@
                     </div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button onclick="saveEdit()" class="flex-1 bg-fuchsia-600 text-white font-bold py-3 rounded-xl">שמור</button>
-                    <button onclick="closeEdit()" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl">ביטול</button>
+                    <button onclick="saveEdit()" class="flex-1 bg-fuchsia-600 text-white font-bold py-3 rounded-xl hover:bg-fuchsia-700">שמור שינויים</button>
+                    <button onclick="closeEdit()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl">ביטול</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="adminAuthModal" class="modal p-4">
+            <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-md">
+                <h3 class="text-2xl font-black mb-4 text-purple-900">ניהול מנהלי מערכת</h3>
+                <div id="adminList" class="space-y-2 max-h-60 overflow-y-auto mb-6 p-1"></div>
+                <div class="flex gap-2 border-t pt-4">
+                    <input id="newAdminName" type="text" placeholder="שם משתמש להוספה" class="flex-1 p-3 bg-slate-50 border rounded-xl outline-none">
+                    <button onclick="addAdmin()" class="bg-purple-700 text-white px-4 rounded-xl font-bold hover:bg-purple-800">+</button>
+                </div>
+                <button onclick="closeAdminAuth()" class="w-full mt-4 text-slate-500 font-bold py-2">סגור</button>
+            </div>
+        </div>
+
+        <div id="detailsModal" class="modal p-4">
+            <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                <div class="bg-purple-950 p-6 text-white flex justify-between items-center shrink-0">
+                    <h3 id="modalWorkerName" class="text-2xl font-black">פירוט משימות צוות</h3>
+                    <button onclick="closeModal()" class="text-white/50 hover:text-white text-2xl">✕</button>
+                </div>
+                <div id="modalTaskList" class="p-6 overflow-y-auto space-y-3 grow"></div>
             </div>
         </div>
 
@@ -101,7 +122,7 @@
             <div class="flex items-center gap-4">
                 <div class="text-left leading-tight">
                     <div id="userNameDisplay" class="font-bold text-purple-900 text-sm"></div>
-                    <button onclick="logout()" class="text-[11px] text-rose-500 font-bold hover:underline">יציאה</button>
+                    <button onclick="logout()" class="text-[11px] text-rose-500 font-bold hover:underline">יציאה מהמערכת</button>
                 </div>
             </div>
         </nav>
@@ -110,11 +131,11 @@
             <div id="sectionTasks" class="space-y-6">
                 <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-purple-50">
                     <div class="flex flex-col md:flex-row gap-4 mb-4">
-                        <div class="flex-1"><input id="inTitle" type="text" placeholder="מה המשימה לביצוע?" class="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold text-lg ring-1 ring-slate-200 focus:ring-2 focus:ring-fuchsia-500"></div>
-                        <div class="flex-1"><input id="inDesc" type="text" placeholder="הערות או קישורים" class="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-200"></div>
+                        <div class="flex-1"><input id="inTitle" type="text" placeholder="מה המשימה לביצוע?" class="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-fuchsia-500 outline-none font-bold text-lg"></div>
+                        <div class="flex-1"><input id="inDesc" type="text" placeholder="הערות או קישורים" class="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-fuchsia-500 outline-none"></div>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <select id="inTargetUser" class="p-3 bg-slate-50 rounded-xl font-bold text-purple-700 outline-none"></select>
+                        <select id="inTargetUser" class="p-3 bg-slate-50 rounded-xl font-bold text-purple-700 outline-none cursor-pointer"></select>
                         <input id="inTime" type="time" class="p-3 bg-slate-50 rounded-xl outline-none">
                         <select id="inRecur" class="p-3 bg-slate-50 rounded-xl outline-none">
                             <option value="חד פעמי">חד פעמי</option>
@@ -122,16 +143,16 @@
                             <option value="שעתי">שעתי</option>
                         </select>
                         <input id="inRange" type="text" placeholder="טווח שעות" class="p-3 bg-slate-50 rounded-xl outline-none text-center">
-                        <button onclick="addTask()" class="bg-fuchsia-600 text-white font-black rounded-xl hover:bg-fuchsia-700 shadow-lg transition-all active:scale-95">הוסף +</button>
+                        <button onclick="addTask()" class="col-span-2 md:col-span-1 bg-fuchsia-600 text-white font-black rounded-xl hover:bg-fuchsia-700 shadow-lg transition-all active:scale-95">הוסף משימה +</button>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden min-h-[300px]">
-                    <table class="w-full text-right">
+                    <table class="w-full text-right border-collapse">
                         <thead class="bg-purple-50 text-purple-400 text-[11px] uppercase font-black tracking-wider">
                             <tr>
-                                <th class="p-6 w-24">שעה/טווח</th>
-                                <th class="p-6">משימה</th>
+                                <th class="p-6 w-24">שעה</th>
+                                <th class="p-6">תיאור המשימה</th>
                                 <th class="p-6 text-center w-40">זמן עבודה</th>
                                 <th class="p-6 text-center w-80">פעולות</th>
                             </tr>
@@ -144,34 +165,24 @@
             <div id="sectionAdmin" class="hidden space-y-8">
                 <div class="flex flex-col md:flex-row justify-between items-end gap-6">
                     <div>
-                        <h2 class="text-4xl font-black text-purple-900 tracking-tight">ניהול ביצועים</h2>
+                        <h2 class="text-4xl font-black text-purple-900 tracking-tight">ניהול ביצועים - פסגות</h2>
                         <div class="flex flex-wrap gap-2 mt-4">
-                            <button onclick="openAdminAuth()" class="bg-purple-950 text-white px-4 py-2 rounded-xl text-xs font-bold">ניהול מנהלים</button>
-                            <button onclick="document.getElementById('xlFile').click()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold">ייבוא נתונים</button>
+                            <button id="superAdminBtn" onclick="openAdminAuth()" class="bg-purple-950 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition">ניהול רשימת מנהלים</button>
+                            <button onclick="downloadTemplate()" class="bg-purple-50 text-purple-700 border border-purple-100 px-4 py-2 rounded-xl text-xs font-bold hover:bg-purple-100 transition">הורד דוגמת CSV</button>
+                            <button onclick="document.getElementById('xlFile').click()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-emerald-700 transition">ייבוא נתונים</button>
                             <input type="file" id="xlFile" class="hidden" accept=".csv" onchange="handleFile(this)">
                         </div>
                     </div>
-                    <div class="bg-white p-1.5 rounded-2xl shadow-sm border flex">
-                        <button onclick="changePeriod('day')" id="btnDay" class="period-btn active px-6 py-2 rounded-xl text-xs font-bold">היום</button>
-                        <button onclick="changePeriod('week')" id="btnWeek" class="period-btn px-6 py-2 rounded-xl text-xs font-bold">השבוע</button>
-                        <button onclick="changePeriod('month')" id="btnMonth" class="period-btn px-6 py-2 rounded-xl text-xs font-bold">החודש</button>
+                    <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex">
+                        <button onclick="changePeriod('day')" id="btnDay" class="period-btn active px-6 py-2 rounded-xl text-xs font-bold transition-all">היום</button>
+                        <button onclick="changePeriod('week')" id="btnWeek" class="period-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">השבוע</button>
+                        <button onclick="changePeriod('month')" id="btnMonth" class="period-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">החודש</button>
+                        <button onclick="changePeriod('all')" id="btnAll" class="period-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">הכל</button>
                     </div>
                 </div>
                 <div id="adminStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </main>
-    </div>
-
-    <div id="adminAuthModal" class="modal p-4">
-        <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-md">
-            <h3 class="text-2xl font-black mb-4">ניהול מנהלי מערכת</h3>
-            <div id="adminList" class="space-y-2 mb-6"></div>
-            <div class="flex gap-2 border-t pt-4">
-                <input id="newAdminName" type="text" placeholder="שם משתמש" class="flex-1 p-3 bg-slate-50 border rounded-xl outline-none">
-                <button onclick="addAdmin()" class="bg-purple-700 text-white px-4 rounded-xl font-bold">+</button>
-            </div>
-            <button onclick="closeAdminAuth()" class="w-full mt-4 text-slate-500 font-bold">סגור</button>
-        </div>
     </div>
 
     <script>
@@ -184,9 +195,8 @@
         let admins = ["שלום שיליץ"];
         let currentPeriod = 'day';
 
-        // בדיקת חיבור ראשונית
         if(user) {
-            document.getElementById('loginOverlay').style.display = 'none'; // תיקון: שימוש בסטייל ישיר
+            document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContent').classList.remove('hidden');
             document.getElementById('userNameDisplay').innerText = "שלום, " + user;
             sync();
@@ -195,7 +205,8 @@
         async function handleLogin() {
             const input = document.getElementById('loginUser').value.trim();
             if(!input) return alert("נא להזין שם משתמש");
-            localStorage.setItem('pro_u', input);
+            user = input;
+            localStorage.setItem('pro_u', user);
             location.reload();
         }
 
@@ -221,39 +232,40 @@
             const activeTasks = allTasks.filter(t => t.worker_name === user && t.last_completed_date !== todayStr && t.status !== 'הושלם');
             const doneTasks = allTasks.filter(t => t.worker_name === user && (t.last_completed_date === todayStr || t.status === 'הושלם'));
 
+            const tbody = document.getElementById('workerTable');
             let html = activeTasks.map(t => renderTaskRow(t, false)).join('');
             if (doneTasks.length > 0) {
                 html += `<tr><td colspan="4"><div class="separator"></div></td></tr>`;
                 html += doneTasks.map(t => renderTaskRow(t, true)).join('');
             }
-            document.getElementById('workerTable').innerHTML = html || `<tr><td colspan="4" class="p-12 text-center text-slate-400">אין משימות להיום</td></tr>`;
+            tbody.innerHTML = html || `<tr><td colspan="4" class="p-12 text-center text-slate-400 font-bold italic">כל הכבוד! אין משימות פתוחות להיום</td></tr>`;
         }
 
         function renderTaskRow(t, isDone) {
-            const timeDisplay = t.hour_range || (t.scheduled_time ? t.scheduled_time.slice(0,5) : '00:00');
             return `
-                <tr class="${isDone ? 'completed-row' : ''} border-b">
-                    <td class="p-6 font-black text-purple-700 text-lg">${timeDisplay}</td>
+                <tr class="${isDone ? 'completed-row' : 'hover:bg-fuchsia-50/30'} border-b last:border-0">
+                    <td class="p-6 font-black text-purple-700 text-lg font-mono">${(t.scheduled_time || '00:00').slice(0,5)}</td>
                     <td class="p-6">
                         <div class="font-bold text-slate-800 text-lg">${t.title}</div>
                         <div class="text-xs text-slate-400">${t.description || ''}</div>
                     </td>
                     <td class="p-6 text-center">
-                        <div id="timer-${t.id}" class="font-mono text-2xl ${t.is_running ? 'timer-active' : 'text-slate-300'}"
+                        <div id="timer-${t.id}" class="font-mono text-2xl tracking-widest ${t.is_running ? 'timer-active' : 'text-slate-300'}"
                              data-start="${t.last_start || ''}" data-total="${t.total_seconds || 0}" data-running="${t.is_running}">
                              ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
                         </div>
                     </td>
-                    <td class="p-6 text-center flex justify-center gap-2">
+                    <td class="p-6 text-center flex justify-center items-center gap-2">
                         ${!isDone ? `
-                            <button onclick="toggleTimer('${t.id}')" class="px-4 py-2 rounded-xl border-2 font-bold text-xs ${t.is_running ? 'bg-fuchsia-50 text-fuchsia-700' : 'bg-white text-slate-600'}">
+                            <button onclick="toggleTimer('${t.id}')" class="px-4 py-2 rounded-xl border-2 font-bold text-xs ${t.is_running ? 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700' : 'bg-white text-slate-600 hover:border-purple-200'}">
                                 ${t.is_running ? 'עצור' : 'הפעל'}
                             </button>
-                            <button onclick="finishTask('${t.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs">סיים</button>
+                            <button onclick="finishTask('${t.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-sm hover:bg-emerald-700">סיים</button>
+                            <button onclick="skipTask('${t.id}')" class="px-4 py-2 bg-slate-400 text-white rounded-xl font-bold text-xs shadow-sm">דלג</button>
                         ` : `
                             <button onclick="recycleTask('${t.id}')" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-xl font-bold text-xs">שחזר ↺</button>
                         `}
-                        <button onclick="openEdit('${t.id}')" class="p-2 text-slate-300">✎</button>
+                        <button onclick="openEdit('${t.id}')" class="p-2 text-slate-300 hover:text-fuchsia-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                     </td>
                 </tr>
             `;
@@ -262,115 +274,38 @@
         async function toggleTimer(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
             const now = new Date().toISOString();
-            let up = t.is_running ?
+            let update = t.is_running ?
                 { is_running: false, total_seconds: (parseInt(t.total_seconds) || 0) + Math.floor((new Date() - new Date(t.last_start)) / 1000), last_start: null } :
                 { is_running: true, last_start: now };
-            await _s.from('tasks').update(up).eq('id', id);
+            await _s.from('tasks').update(update).eq('id', id);
             sync();
         }
 
         async function finishTask(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
             const today = new Date().toISOString().split('T')[0];
-            let sec = parseInt(t.total_seconds) || 0;
-            if(t.is_running) sec += Math.floor((new Date() - new Date(t.last_start)) / 1000);
-           
-            let up = { is_running: false, last_start: null, total_seconds: sec, last_completed_date: today };
-            if(t.recurrence === 'חד פעמי') up.status = 'הושלם';
-           
-            await _s.from('tasks').update(up).eq('id', id);
+            let finalSec = parseInt(t.total_seconds) || 0;
+            if(t.is_running) finalSec += Math.floor((new Date() - new Date(t.last_start)) / 1000);
+            let update = { is_running: false, last_start: null, total_seconds: finalSec };
+            if(t.recurrence === 'יומי') update.last_completed_date = today;
+            else if(t.recurrence === 'שעתי') {
+                let [hh, mm] = (t.scheduled_time || '00:00').split(':');
+                update.scheduled_time = `${((parseInt(hh) + 1) % 24).toString().padStart(2, '0')}:${mm}`;
+                update.total_seconds = 0;
+            } else { update.status = 'הושלם'; update.last_completed_date = today; }
+            await _s.from('tasks').update(update).eq('id', id);
+            sync();
+        }
+
+        async function skipTask(id) {
+            const today = new Date().toISOString().split('T')[0];
+            await _s.from('tasks').update({ last_completed_date: today, is_running: false }).eq('id', id);
             sync();
         }
 
         async function recycleTask(id) {
             await _s.from('tasks').update({ status: 'בביצוע', last_completed_date: null, is_running: false, total_seconds: 0 }).eq('id', id);
             sync();
-        }
-
-        async function addTask() {
-            const title = document.getElementById('inTitle').value;
-            if(!title) return;
-            const target = document.getElementById('inTargetUser').value;
-            let names = (target === 'כולם') ? [...new Set(allTasks.map(t => t.worker_name))] : [target === 'self' ? user : target];
-           
-            const batch = names.filter(n => n).map(n => ({
-                title,
-                worker_name: n,
-                description: document.getElementById('inDesc').value,
-                scheduled_time: document.getElementById('inTime').value || '00:00',
-                hour_range: document.getElementById('inRange').value,
-                recurrence: document.getElementById('inRecur').value,
-                status: 'בביצוע'
-            }));
-           
-            await _s.from('tasks').insert(batch);
-            document.getElementById('inTitle').value = '';
-            document.getElementById('inDesc').value = '';
-            document.getElementById('inRange').value = '';
-            sync();
-        }
-
-        function renderAdminUI() {
-            if(!admins.includes(user)) return;
-            const grouped = {};
-            const now = new Date();
-           
-            allTasks.forEach(t => {
-                if(!t.worker_name) return;
-                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0, running: [] };
-               
-                const tDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
-                const isToday = tDate && tDate.toDateString() === now.toDateString();
-               
-                grouped[t.worker_name].total++;
-                if(isToday || t.status === 'הושלם') {
-                    grouped[t.worker_name].done++;
-                    grouped[t.worker_name].time += (t.total_seconds || 0);
-                }
-                if(t.is_running) grouped[t.worker_name].running.push(t);
-            });
-
-            document.getElementById('adminStats').innerHTML = Object.entries(grouped).map(([name, data]) => {
-                const prog = Math.round((data.done / data.total) * 100) || 0;
-                return `
-                    <div class="stat-card bg-white p-6 rounded-[2rem] shadow-sm border border-purple-100">
-                        <div class="flex justify-between mb-4">
-                            <h4 class="text-xl font-black text-purple-900">${name}</h4>
-                            <span class="text-fuchsia-600 font-bold">${prog}%</span>
-                        </div>
-                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-4">
-                            <div class="bg-fuchsia-600 h-full" style="width: ${prog}%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs font-bold text-slate-500 pt-2 border-t">
-                            <span>${data.done}/${data.total} משימות</span>
-                            <span>${Math.floor(data.time/60)} דק' עבודה</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function openEdit(id) {
-            const t = allTasks.find(x => String(x.id) === String(id));
-            document.getElementById('editId').value = t.id;
-            document.getElementById('editTitle').value = t.title;
-            document.getElementById('editDesc').value = t.description || '';
-            document.getElementById('editRange').value = t.hour_range || '';
-            document.getElementById('editTime').value = t.scheduled_time || '00:00';
-            document.getElementById('editRecur').value = t.recurrence;
-            document.getElementById('editModal').classList.add('open');
-        }
-
-        async function saveEdit() {
-            const id = document.getElementById('editId').value;
-            await _s.from('tasks').update({
-                title: document.getElementById('editTitle').value,
-                description: document.getElementById('editDesc').value,
-                hour_range: document.getElementById('editRange').value,
-                scheduled_time: document.getElementById('editTime').value,
-                recurrence: document.getElementById('editRecur').value
-            }).eq('id', id);
-            closeEdit(); sync();
         }
 
         function formatTime(total, lastStart) {
@@ -382,7 +317,134 @@
             return `${h}:${m}:${s}`;
         }
 
+        function renderAdminUI() {
+            if(!admins.includes(user)) return;
+            const statsDiv = document.getElementById('adminStats');
+            const grouped = {};
+            const now = new Date();
+            const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay());
+
+            allTasks.forEach(t => {
+                if(!t.worker_name) return;
+                const tDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
+                let isMatch = false;
+                if(currentPeriod === 'day') isMatch = tDate && tDate.toDateString() === now.toDateString();
+                else if(currentPeriod === 'week') isMatch = tDate && tDate >= startOfWeek;
+                else if(currentPeriod === 'month') isMatch = tDate && tDate.getMonth() === now.getMonth();
+                else isMatch = true;
+
+                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0, running: [] };
+                grouped[t.worker_name].total++;
+
+                let taskTime = (t.total_seconds || 0);
+                if(t.is_running && t.last_start) {
+                    taskTime += Math.floor((new Date() - new Date(t.last_start)) / 1000);
+                }
+
+                if(isMatch || t.status === 'הושלם') {
+                    grouped[t.worker_name].done++;
+                    grouped[t.worker_name].time += taskTime;
+                }
+                if(t.is_running) grouped[t.worker_name].running.push(t);
+            });
+
+            statsDiv.innerHTML = Object.entries(grouped).map(([name, data]) => {
+                const prog = Math.round((data.done / data.total) * 100) || 0;
+                return `
+                    <div class="stat-card bg-white p-6 rounded-[2rem] shadow-sm border border-purple-100">
+                        <div onclick="showWorkerDetails('${name}')" class="cursor-pointer">
+                            <div class="flex justify-between mb-4">
+                                <h4 class="text-xl font-black text-purple-900">${name}</h4>
+                                <span class="bg-fuchsia-50 text-fuchsia-600 px-3 py-1 rounded-xl text-sm font-bold">${prog}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-4"><div class="bg-fuchsia-600 h-full" style="width: ${prog}%"></div></div>
+                            <div class="flex justify-between text-xs font-bold text-slate-500 pt-2 border-t">
+                                <span>${data.done}/${data.total} משימות</span>
+                                <span>${Math.floor(data.time/60)} דק' עבודה</span>
+                            </div>
+                        </div>
+                        ${data.running.length > 0 ? `<div class="mt-4 p-3 bg-fuchsia-50 rounded-xl border border-fuchsia-100">
+                            <div class="text-[10px] font-bold text-fuchsia-400 mb-2 uppercase tracking-wider">משימה פעילה כעת:</div>
+                            ${data.running.map(r => `
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[11px] font-bold text-purple-900 truncate ml-2">${r.title}</span>
+                                    <span id="admin-timer-${r.id}" class="text-[11px] font-mono font-black text-rose-500 timer-active"
+                                          data-start="${r.last_start}" data-total="${r.total_seconds}" data-running="true">
+                                          ${formatTime(r.total_seconds, r.last_start)}
+                                    </span>
+                                </div>`).join('')}
+                        </div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showWorkerDetails(name) {
+            document.getElementById('modalWorkerName').innerText = "ביצועי צוות: " + name;
+            const tasks = allTasks.filter(t => t.worker_name === name);
+            document.getElementById('modalTaskList').innerHTML = tasks.map(t => `
+                <div class="bg-white p-4 rounded-2xl flex justify-between items-center border border-purple-50 hover:border-fuchsia-200 shadow-sm transition-all">
+                    <div>
+                        <div class="font-bold text-slate-800">${t.title}</div>
+                        <div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider">${t.status}</div>
+                    </div>
+                    <div id="detail-timer-${t.id}" class="font-mono text-lg font-bold ${t.is_running ? 'text-rose-500 timer-active' : 'text-slate-600'}"
+                         data-start="${t.last_start || ''}" data-total="${t.total_seconds || 0}" data-running="${t.is_running}">
+                         ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
+                    </div>
+                </div>`).join('');
+            document.getElementById('detailsModal').classList.add('open');
+        }
+
+        async function addTask() {
+            const title = document.getElementById('inTitle').value;
+            const target = document.getElementById('inTargetUser').value;
+            if(!title) return;
+            let names = (target === 'כולם') ? [...new Set(allTasks.map(t => t.worker_name))] : [target === 'self' ? user : target];
+            const batch = names.map(n => ({
+                title, worker_name: n, description: document.getElementById('inDesc').value,
+                scheduled_time: document.getElementById('inTime').value || '00:00',
+                recurrence: document.getElementById('inRecur').value, status: 'בביצוע'
+            }));
+            await _s.from('tasks').insert(batch);
+            document.getElementById('inTitle').value = '';
+            document.getElementById('inDesc').value = '';
+            sync();
+        }
+
+        function downloadTemplate() {
+            const csv = "\uFEFFworker_name,title,description,scheduled_time,recurrence\nישראל,משימה לדוגמה,תיאור,08:00,יומי";
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Psagot_Template.csv"; link.click();
+        }
+
+        function handleFile(input) {
+            Papa.parse(input.files[0], { header: true, complete: async (r) => {
+                const tasks = r.data.filter(x => x.worker_name).map(x => ({ ...x, status: 'בביצוע', total_seconds: 0 }));
+                await _s.from('tasks').insert(tasks); sync();
+            }});
+        }
+
+        function openEdit(id) {
+            const t = allTasks.find(x => String(x.id) === String(id));
+            document.getElementById('editId').value = t.id; document.getElementById('editTitle').value = t.title;
+            document.getElementById('editDesc').value = t.description; document.getElementById('editTime').value = t.scheduled_time;
+            document.getElementById('editRecur').value = t.recurrence; document.getElementById('editModal').classList.add('open');
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('editId').value;
+            await _s.from('tasks').update({
+                title: document.getElementById('editTitle').value,
+                description: document.getElementById('editDesc').value,
+                scheduled_time: document.getElementById('editTime').value,
+                recurrence: document.getElementById('editRecur').value
+            }).eq('id', id);
+            closeEdit(); sync();
+        }
+
         function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
+        function closeModal() { document.getElementById('detailsModal').classList.remove('open'); }
         function openAdminAuth() { document.getElementById('adminAuthModal').classList.add('open'); renderAdminList(); }
         function closeAdminAuth() { document.getElementById('adminAuthModal').classList.remove('open'); }
 
@@ -390,7 +452,7 @@
             document.getElementById('adminList').innerHTML = admins.map(a => `
                 <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border">
                     <span class="font-bold text-slate-700">${a}</span>
-                    <button onclick="removeAdmin('${a}')" class="text-rose-500 font-black px-2">✕</button>
+                    <button onclick="removeAdmin('${a}')" class="text-rose-500 font-black px-2 hover:bg-rose-50 rounded-lg">✕</button>
                 </div>`).join('');
         }
 
@@ -398,14 +460,14 @@
             const name = document.getElementById('newAdminName').value.trim();
             if(!name || admins.includes(name)) return;
             admins.push(name);
-            await _s.from('settings').upsert({ key: 'admin_users', value: admins });
+            await _s.from('settings').upsert({ key: 'admin_users', value: admins }, { onConflict: 'key' });
             document.getElementById('newAdminName').value = ''; renderAdminList(); sync();
         }
 
         async function removeAdmin(name) {
-            if(name === "שלום שיליץ") return;
+            if(name === "שלום שיליץ") return alert("לא ניתן להסיר את המנהל הראשי");
             admins = admins.filter(a => a !== name);
-            await _s.from('settings').upsert({ key: 'admin_users', value: admins });
+            await _s.from('settings').upsert({ key: 'admin_users', value: admins }, { onConflict: 'key' });
             renderAdminList(); sync();
         }
 
@@ -417,6 +479,13 @@
             document.getElementById('aBtn').className = !isTask ? "px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-fuchsia-700" : "px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500";
         }
 
+        function changePeriod(p) {
+            currentPeriod = p;
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
+            renderAdminUI();
+        }
+
         function updateUserList() {
             const users = [...new Set(allTasks.map(t => t.worker_name))].filter(u => u);
             let opts = `<option value="self">עבורי (${user})</option><option value="כולם">כל הצוות</option>`;
@@ -424,10 +493,10 @@
             document.getElementById('inTargetUser').innerHTML = opts;
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
+        function logout() { localStorage.removeItem('pro_u'); location.reload(); }
 
         setInterval(() => {
-            document.querySelectorAll('[id^="timer-"]').forEach(el => {
+            document.querySelectorAll('[id^="timer-"], [id^="admin-timer-"], [id^="detail-timer-"]').forEach(el => {
                 if(el.getAttribute('data-running') === 'true') {
                     el.innerText = formatTime(el.getAttribute('data-total'), el.getAttribute('data-start'));
                 }
@@ -438,5 +507,6 @@
     </script>
 </body>
 </html>
+
 
 
