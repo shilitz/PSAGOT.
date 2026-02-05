@@ -23,36 +23,25 @@
             padding: 3rem; border-radius: 3rem; width: 100%; max-width: 420px; text-align: center;
         }
 
+        .tab-btn.active { border-bottom: 4px solid #a21caf; color: #a21caf; font-weight: 800; }
         .period-btn { background: white; color: #64748b; border: 1px solid #e2e8f0; }
         .period-btn.active { background: #701a75; color: white; border-color: #701a75; box-shadow: 0 4px 12px rgba(112, 26, 117, 0.3); }
         
         .modal { display: none; position: fixed; z-index: 100; inset: 0; background: rgba(46, 16, 101, 0.85); align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal.open { display: flex; }
         
-        /* עיצוב למשימה פעילה כרגע */
-        .active-task { 
-            background: #fff1f2 !important; 
-            border-right: 8px solid #f43f5e !important;
-            animation: activeGlow 2s infinite ease-in-out;
-        }
-        @keyframes activeGlow {
-            0% { box-shadow: inset 0 0 0px #f43f5e33; }
-            50% { box-shadow: inset 0 0 15px #f43f5e33; }
-            100% { box-shadow: inset 0 0 0px #f43f5e33; }
-        }
-        .active-badge {
-            background: #f43f5e; color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;
-            animation: blink 1s infinite; margin-right: 8px;
-        }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
+        .timer-active { color: #f43f5e; font-weight: 900; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        
         .stat-card { transition: all 0.3s ease; border-right: 6px solid #701a75; }
         .completed-row { opacity: 0.6; background-color: #fdf4ff; }
         
         .separator { border-top: 3px dashed #d8b4fe; margin: 20px 0; position: relative; }
-        .separator::after { content: 'המשך הלו"ז'; position: absolute; top: -12px; right: 20px; background: #f8fafc; padding: 0 10px; font-size: 12px; font-weight: bold; color: #a21caf; }
+        .separator::after { content: 'משימות שבוצעו היום'; position: absolute; top: -12px; right: 20px; background: #f8fafc; padding: 0 10px; font-size: 12px; font-weight: bold; color: #a21caf; }
         
         input, select { text-align: right; }
+        .logo-img { max-height: 60px; margin: 0 auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .logo-img-light { filter: brightness(0) invert(1); }
     </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -70,261 +59,439 @@
     <div id="appContent" class="hidden">
         <div id="editModal" class="modal p-4">
             <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-md">
-                <h3 id="modalTitle" class="text-2xl font-black mb-6 text-purple-900">הגדרת משימה</h3>
+                <h3 class="text-2xl font-black mb-6 text-purple-900">עריכת משימה</h3>
                 <input id="editId" type="hidden">
                 <div class="space-y-4">
-                    <div><label class="text-xs font-bold text-slate-500">כותרת המשימה</label><input id="editTitle" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
-                    
-                    <div>
-                        <label class="text-xs font-bold text-slate-500">מחזוריות</label>
-                        <select id="editRecur" onchange="toggleHourlyFields()" class="w-full p-3 bg-slate-50 border rounded-xl">
-                            <option value="חד פעמי">חד פעמי (שעה ספציפית)</option>
-                            <option value="שעתי">שעתי (טווח שעות)</option>
-                            <option value="יומי">יומי (כל בוקר)</option>
-                        </select>
+                    <div><label class="text-xs font-bold text-slate-500">כותרת</label><input id="editTitle" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
+                    <div><label class="text-xs font-bold text-slate-500">תיאור</label><input id="editDesc" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-bold text-slate-500">זמן יעד</label><input id="editTime" type="time" class="w-full p-3 bg-slate-50 border rounded-xl"></div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500">מחזוריות</label>
+                            <select id="editRecur" class="w-full p-3 bg-slate-50 border rounded-xl">
+                                <option value="חד פעמי">חד פעמי</option>
+                                <option value="יומי">יומי</option>
+                                <option value="שעתי">שעתי</option>
+                            </select>
+                        </div>
                     </div>
-
-                    <div id="singleTimeField">
-                        <label class="text-xs font-bold text-slate-500">שעת יעד</label>
-                        <input id="editTime" type="time" class="w-full p-3 bg-slate-50 border rounded-xl">
-                    </div>
-
-                    <div id="hourlyFields" class="hidden grid grid-cols-2 gap-4">
-                        <div><label class="text-xs font-bold text-slate-500">משעה</label><input id="startHour" type="time" value="08:00" class="w-full p-3 bg-slate-50 border rounded-xl"></div>
-                        <div><label class="text-xs font-bold text-slate-500">עד שעה</label><input id="endHour" type="time" value="18:00" class="w-full p-3 bg-slate-50 border rounded-xl"></div>
-                    </div>
-
-                    <div><label class="text-xs font-bold text-slate-500">שם העובד</label><input id="editWorker" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
+                    <div><label class="text-xs font-bold text-slate-500">טווח שעות (לשעתי)</label><input id="editRange" type="text" class="w-full p-3 bg-slate-50 border rounded-xl outline-none"></div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button onclick="saveTask()" class="flex-1 bg-fuchsia-600 text-white font-bold py-3 rounded-xl">שמור</button>
+                    <button onclick="saveEdit()" class="flex-1 bg-fuchsia-600 text-white font-bold py-3 rounded-xl hover:bg-fuchsia-700">שמור</button>
                     <button onclick="closeEdit()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl">ביטול</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="adminAuthModal" class="modal p-4">
+            <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-md">
+                <h3 class="text-2xl font-black mb-4 text-purple-900">ניהול מנהלי מערכת</h3>
+                <div id="adminList" class="space-y-2 max-h-60 overflow-y-auto mb-6 p-1"></div>
+                <div class="flex gap-2 border-t pt-4">
+                    <input id="newAdminName" type="text" placeholder="שם משתמש להוספה" class="flex-1 p-3 bg-slate-50 border rounded-xl outline-none">
+                    <button onclick="addAdmin()" class="bg-purple-700 text-white px-4 rounded-xl font-bold">+</button>
+                </div>
+                <button onclick="closeAdminAuth()" class="w-full mt-4 text-slate-500 font-bold py-2">סגור</button>
+            </div>
+        </div>
+
+        <div id="detailsModal" class="modal p-4">
+            <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                <div class="bg-purple-950 p-6 text-white flex justify-between items-center shrink-0">
+                    <h3 id="modalWorkerName" class="text-2xl font-black">פירוט משימות צוות</h3>
+                    <button onclick="closeModal()" class="text-white/50 hover:text-white text-2xl">✕</button>
+                </div>
+                <div id="modalTaskList" class="p-6 overflow-y-auto space-y-3 grow"></div>
             </div>
         </div>
 
         <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center border-b border-purple-100 shadow-sm">
             <div class="flex items-center gap-8">
                 <span class="text-2xl font-black text-purple-900">פסגות</span>
-                <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
-                    <button onclick="setPeriod('day')" id="dayBtn" class="period-btn px-6 py-2 rounded-lg font-bold transition-all active">יום</button>
-                    <button onclick="setPeriod('month')" id="monthBtn" class="period-btn px-6 py-2 rounded-lg font-bold transition-all">חודש</button>
+                <div class="flex gap-1 bg-purple-50 p-1 rounded-xl">
+                    <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-fuchsia-700">משימות שלי</button>
+                    <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-500">לוח מנהלים</button>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <span id="currentUserDisplay" class="font-bold text-purple-900"></span>
-                <button onclick="logout()" class="text-slate-400 hover:text-red-500 font-bold">יציאה</button>
+                <div class="text-left leading-tight">
+                    <div id="userNameDisplay" class="font-bold text-purple-900 text-sm"></div>
+                    <button onclick="logout()" class="text-[11px] text-rose-500 font-bold hover:underline">יציאה</button>
+                </div>
             </div>
         </nav>
 
-        <main class="max-w-7xl mx-auto p-6 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="stat-card bg-white p-8 rounded-3xl shadow-sm">
-                    <p class="text-slate-500 font-bold mb-1">ביצועים עד כה (להיום)</p>
-                    <div class="flex items-end gap-2">
-                        <h2 id="currentScore" class="text-5xl font-black text-purple-950">0%</h2>
-                        <span id="scoreTrend" class="text-sm font-bold text-emerald-500 mb-2">תקין</span>
+        <main class="max-w-6xl mx-auto p-6">
+            <div id="sectionTasks" class="space-y-6">
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-purple-50">
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <div class="flex-1"><input id="inTitle" type="text" placeholder="מה המשימה לביצוע?" class="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-fuchsia-500 outline-none font-bold text-lg"></div>
+                        <div class="flex-1"><input id="inDesc" type="text" placeholder="הערות או קישורים" class="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-fuchsia-500 outline-none"></div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <select id="inTargetUser" class="p-3 bg-slate-50 rounded-xl font-bold text-purple-700 outline-none cursor-pointer"></select>
+                        <input id="inTime" type="time" class="p-3 bg-slate-50 rounded-xl outline-none">
+                        <select id="inRecur" class="p-3 bg-slate-50 rounded-xl outline-none">
+                            <option value="חד פעמי">חד פעמי</option>
+                            <option value="יומי">יומי</option>
+                            <option value="שעתי">שעתי</option>
+                        </select>
+                        <input id="inRange" type="text" placeholder="טווח שעות" class="p-3 bg-slate-50 rounded-xl outline-none text-center">
+                        <button onclick="addTask()" class="col-span-2 md:col-span-1 bg-fuchsia-600 text-white font-black rounded-xl hover:bg-fuchsia-700 shadow-lg transition-all active:scale-95">הוסף משימה +</button>
                     </div>
                 </div>
-                <div class="stat-card bg-white p-8 rounded-3xl shadow-sm border-r-fuchsia-500">
-                    <p class="text-slate-500 font-bold mb-1">משימות שהושלמו</p>
-                    <h2 id="tasksCount" class="text-5xl font-black text-purple-950">0/0</h2>
-                </div>
-                <div id="adminPanel" class="stat-card bg-purple-900 p-8 rounded-3xl shadow-sm border-none hidden">
-                    <p class="text-purple-200 font-bold mb-3">ניהול מנהלים</p>
-                    <button onclick="openNewTask()" class="w-full bg-white/10 text-white border border-white/20 py-3 rounded-xl font-bold hover:bg-white/20">+ הוספת משימה</button>
+
+                <div class="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden min-h-[300px]">
+                    <table class="w-full text-right border-collapse">
+                        <thead class="bg-purple-50 text-purple-400 text-[11px] uppercase font-black tracking-wider">
+                            <tr>
+                                <th class="p-6 w-24">שעה/טווח</th>
+                                <th class="p-6">תיאור המשימה</th>
+                                <th class="p-6 text-center w-40">זמן עבודה</th>
+                                <th class="p-6 text-center w-80">פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workerTable" class="divide-y divide-purple-50"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                    <h2 class="text-2xl font-black text-purple-950">לו"ז משימות מפורט</h2>
-                    <div class="flex gap-3">
-                        <button onclick="importCSV()" class="bg-white text-slate-700 border px-6 py-3 rounded-2xl font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
-                            <span>📤</span> ייבוא CSV
-                        </button>
-                        <input type="file" id="csvInput" accept=".csv" class="hidden" onchange="processCSV(event)">
+            <div id="sectionAdmin" class="hidden space-y-8">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div>
+                        <h2 class="text-4xl font-black text-purple-900 tracking-tight">ניהול ביצועים - פסגות</h2>
+                        <div class="flex flex-wrap gap-2 mt-4">
+                            <button onclick="openAdminAuth()" class="bg-purple-950 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition">ניהול מנהלים</button>
+                            <button onclick="downloadTemplate()" class="bg-purple-50 text-purple-700 border border-purple-100 px-4 py-2 rounded-xl text-xs font-bold hover:bg-purple-100 transition">הורד דוגמת CSV</button>
+                            <button onclick="document.getElementById('xlFile').click()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-emerald-700 transition">ייבוא משימות</button>
+                            <input type="file" id="xlFile" class="hidden" accept=".csv" onchange="handleFile(this)">
+                        </div>
+                    </div>
+                    <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex">
+                        <button onclick="changePeriod('day')" id="btnDay" class="period-btn active px-6 py-2 rounded-xl text-xs font-bold transition-all">היום</button>
+                        <button onclick="changePeriod('week')" id="btnWeek" class="period-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">השבוע</button>
+                        <button onclick="changePeriod('month')" id="btnMonth" class="period-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">החודש</button>
+                        <button onclick="changePeriod('all')" id="btnAll" class="period-btn px-6 py-2 rounded-xl text-xs font-bold transition-all">הכל</button>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-right text-slate-400 text-sm uppercase tracking-widest">
-                                <th class="p-6 font-bold">שעה</th>
-                                <th class="p-6 font-bold">משימה</th>
-                                <th class="p-6 font-bold">עובד</th>
-                                <th class="p-6 font-bold">סטטוס</th>
-                                <th class="p-6 font-bold">פעולות</th>
-                            </tr>
-                        </thead>
-                        <tbody id="taskTableBody" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>
+                <div id="adminStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </main>
     </div>
 
     <script>
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SB_URL = 'https://ytcthmwkmvajmfegnqas.supabase.co';
+        const SB_KEY = 'sb_publishable_zFfoc_9qq0d__uyeyUUqZA_OQ4m5_o3';
+        const _s = supabase.createClient(SB_URL, SB_KEY);
+        
+        let user = localStorage.getItem('pro_u');
+        let allTasks = [];
+        let admins = ["שלום שיליץ"];
+        let currentPeriod = 'day';
 
-        let currentUser = localStorage.getItem('proTrackUser') || null;
-        let baseTasks = [];
-        let admins = ['admin', 'manager']; // ניתן להוסיף טעינה מה-DB
-
-        async function init() {
-            if (currentUser) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('appContent').classList.remove('hidden');
-                document.getElementById('currentUserDisplay').innerText = `שלום, ${currentUser}`;
-                if (admins.includes(currentUser)) document.getElementById('adminPanel').classList.remove('hidden');
-                loadTasks();
-                setInterval(renderTasks, 30000); 
-            }
+        if(user) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('appContent').classList.remove('hidden');
+            document.getElementById('userNameDisplay').innerText = "שלום, " + user;
+            sync();
         }
 
-        async function loadTasks() {
-            const { data } = await supabase.from('tasks').select('*');
-            if (data) {
-                baseTasks = data;
-                renderTasks();
-            }
+        async function handleLogin() {
+            const input = document.getElementById('loginUser').value.trim();
+            if(!input) return alert("נא להזין שם משתמש");
+            user = input;
+            localStorage.setItem('pro_u', user);
+            location.reload();
         }
 
-        function toggleHourlyFields() {
-            const recur = document.getElementById('editRecur').value;
-            document.getElementById('hourlyFields').classList.toggle('hidden', recur !== 'שעתי');
-            document.getElementById('singleTimeField').classList.toggle('hidden', recur === 'שעתי');
-        }
-
-        function renderTasks() {
-            const tbody = document.getElementById('taskTableBody');
-            tbody.innerHTML = '';
-            
-            const now = new Date();
-            const currentTimeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-
-            let expandedTasks = [];
-            baseTasks.forEach(task => {
-                if (task.recurrence === 'שעתי' && task.start_hour && task.end_hour) {
-                    let start = parseInt(task.start_hour.split(':')[0]);
-                    let end = parseInt(task.end_hour.split(':')[0]);
-                    for (let h = start; h <= end; h++) {
-                        expandedTasks.push({
-                            ...task,
-                            target_time: h.toString().padStart(2, '0') + ":00",
-                            instance_id: `${task.id}-${h}`
-                        });
-                    }
-                } else {
-                    expandedTasks.push({ ...task, instance_id: task.id });
-                }
-            });
-
-            expandedTasks.sort((a, b) => a.target_time.localeCompare(b.target_time));
-
-            let totalRequiredToday = 0;
-            let completedToday = 0;
-            let activeTaskFound = false;
-            let separatorAdded = false;
-
-            expandedTasks.forEach(task => {
-                const isPast = task.target_time <= currentTimeStr;
-                const isCompleted = task.is_completed;
+        async function sync() {
+            try {
+                const { data: tasks, error } = await _s.from('tasks').select('*').order('scheduled_time', { ascending: true });
+                if(error) throw error;
+                allTasks = tasks || [];
                 
-                // חישוב רק מהיום
-                if (isPast) {
-                    totalRequiredToday++;
-                    if (isCompleted) completedToday++;
-                }
+                const { data: settingsData } = await _s.from('settings').select('*').eq('key', 'admin_users');
+                if(settingsData && settingsData.length > 0) admins = settingsData[0].value;
 
-                const isActive = !activeTaskFound && !isCompleted && (task.target_time >= currentTimeStr || task.target_time.split(':')[0] == now.getHours());
-                if (isActive) activeTaskFound = true;
-
-                if (!separatorAdded && task.target_time > currentTimeStr) {
-                    const sep = document.createElement('tr');
-                    sep.innerHTML = `<td colspan="5"><div class="separator"></div></td>`;
-                    tbody.appendChild(sep);
-                    separatorAdded = true;
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = `transition-all ${isCompleted ? 'completed-row' : ''} ${isActive ? 'active-task font-bold' : 'hover:bg-slate-50'}`;
+                document.getElementById('aBtn').classList.toggle('hidden', !admins.includes(user));
                 
-                tr.innerHTML = `
-                    <td class="p-6 font-bold text-purple-900">${task.target_time}</td>
+                updateUserList();
+                renderWorkerUI();
+                renderAdminUI();
+            } catch (err) { console.error("Sync Error:", err); }
+        }
+
+        function renderWorkerUI() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const activeTasks = allTasks.filter(t => t.worker_name === user && t.last_completed_date !== todayStr && t.status !== 'הושלם');
+            const doneTasks = allTasks.filter(t => t.worker_name === user && (t.last_completed_date === todayStr || t.status === 'הושלם'));
+
+            const tbody = document.getElementById('workerTable');
+            let html = activeTasks.map(t => renderTaskRow(t, false)).join('');
+            if (doneTasks.length > 0) {
+                html += `<tr><td colspan="4"><div class="separator"></div></td></tr>`;
+                html += doneTasks.map(t => renderTaskRow(t, true)).join('');
+            }
+            tbody.innerHTML = html || `<tr><td colspan="4" class="p-12 text-center text-slate-400 font-bold italic">אין משימות להיום</td></tr>`;
+        }
+
+        function renderTaskRow(t, isDone) {
+            const timeDisplay = t.recurrence === 'שעתי' ? (t.hour_range || 'שעתי') : (t.scheduled_time || '00:00').slice(0,5);
+            return `
+                <tr class="${isDone ? 'completed-row' : 'hover:bg-fuchsia-50/30'} border-b last:border-0">
+                    <td class="p-6 font-black text-purple-700 text-lg font-mono">${timeDisplay}</td>
                     <td class="p-6">
-                        <div class="flex items-center">
-                            ${isActive ? '<span class="active-badge">בביצוע</span>' : ''}
-                            <span class="text-slate-800">${task.title}</span>
+                        <div class="font-bold text-slate-800 text-lg">${t.title}</div>
+                        <div class="text-xs text-slate-400">${t.description || ''}</div>
+                    </td>
+                    <td class="p-6 text-center">
+                        <div id="timer-${t.id}" class="font-mono text-2xl tracking-widest ${t.is_running ? 'timer-active' : 'text-slate-300'}"
+                             data-start="${t.last_start || ''}" data-total="${t.total_seconds || 0}" data-running="${t.is_running}">
+                             ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
                         </div>
                     </td>
-                    <td class="p-6 text-slate-600">${task.worker_name || '-'}</td>
-                    <td class="p-6">
-                        <span class="px-3 py-1 rounded-full text-xs font-black ${isCompleted ? 'bg-emerald-100 text-emerald-700' : (isPast ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700')}">
-                            ${isCompleted ? 'בוצע' : (isPast ? 'באיחור' : 'בהמתנה')}
-                        </span>
+                    <td class="p-6 text-center flex justify-center items-center gap-2">
+                        ${!isDone ? `
+                            <button onclick="toggleTimer('${t.id}')" class="px-4 py-2 rounded-xl border-2 font-bold text-xs ${t.is_running ? 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700' : 'bg-white text-slate-600'}">
+                                ${t.is_running ? 'עצור' : 'הפעל'}
+                            </button>
+                            <button onclick="finishTask('${t.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs">סיים</button>
+                        ` : `
+                            <button onclick="recycleTask('${t.id}')" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-xl font-bold text-xs">שחזר ↺</button>
+                        `}
+                        <button onclick="openEdit('${t.id}')" class="p-2 text-slate-300 hover:text-fuchsia-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                     </td>
-                    <td class="p-6">
-                        <button onclick="toggleTask('${task.id}', ${isCompleted})" class="p-2 hover:bg-emerald-50 text-emerald-600">✓</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+                </tr>
+            `;
+        }
+
+        async function toggleTimer(id) {
+            const t = allTasks.find(x => String(x.id) === String(id));
+            const now = new Date().toISOString();
+            let update = t.is_running ? 
+                { is_running: false, total_seconds: (parseInt(t.total_seconds) || 0) + Math.floor((new Date() - new Date(t.last_start)) / 1000), last_start: null } :
+                { is_running: true, last_start: now };
+            await _s.from('tasks').update(update).eq('id', id);
+            sync();
+        }
+
+        async function finishTask(id) {
+            const t = allTasks.find(x => String(x.id) === String(id));
+            const today = new Date().toISOString().split('T')[0];
+            let finalSec = parseInt(t.total_seconds) || 0;
+            if(t.is_running) finalSec += Math.floor((new Date() - new Date(t.last_start)) / 1000);
+            
+            let update = { is_running: false, last_start: null, total_seconds: finalSec, last_completed_date: today };
+            if(t.recurrence === 'חד פעמי') update.status = 'הושלם';
+            
+            await _s.from('tasks').update(update).eq('id', id);
+            sync();
+        }
+
+        async function recycleTask(id) {
+            await _s.from('tasks').update({ status: 'בביצוע', last_completed_date: null, is_running: false, total_seconds: 0 }).eq('id', id);
+            sync();
+        }
+
+        function formatTime(total, lastStart) {
+            let sec = parseInt(total) || 0;
+            if(lastStart) sec += Math.floor((new Date() - new Date(lastStart)) / 1000);
+            const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+            const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        function renderAdminUI() {
+            if(!admins.includes(user)) return;
+            const statsDiv = document.getElementById('adminStats');
+            const grouped = {};
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            allTasks.forEach(t => {
+                if(!t.worker_name) return;
+                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0, running: [] };
+                
+                // סטטיסטיקה להיום בלבד
+                const isRelevantToday = t.last_completed_date === todayStr || t.status === 'בביצוע';
+                if(isRelevantToday) {
+                    grouped[t.worker_name].total++;
+                    if(t.last_completed_date === todayStr) grouped[t.worker_name].done++;
+                }
+
+                // חישוב זמן (לפי התקופה שנבחרה)
+                const tDate = t.last_completed_date;
+                let isMatch = false;
+                if(currentPeriod === 'day') isMatch = (tDate === todayStr);
+                else if(currentPeriod === 'week') {
+                    const d = new Date(tDate); const now = new Date();
+                    isMatch = tDate && d > new Date(now.setDate(now.getDate() - 7));
+                } else isMatch = true;
+
+                if(isMatch || t.is_running) {
+                    let taskTime = (t.total_seconds || 0);
+                    if(t.is_running && t.last_start) taskTime += Math.floor((new Date() - new Date(t.last_start)) / 1000);
+                    grouped[t.worker_name].time += taskTime;
+                }
+
+                if(t.is_running) grouped[t.worker_name].running.push(t);
             });
 
-            const score = totalRequiredToday > 0 ? Math.round((completedToday / totalRequiredToday) * 100) : 100;
-            document.getElementById('currentScore').innerText = score + "%";
-            document.getElementById('tasksCount').innerText = `${completedToday}/${expandedTasks.length}`;
+            statsDiv.innerHTML = Object.entries(grouped).map(([name, data]) => {
+                const prog = Math.round((data.done / data.total) * 100) || 0;
+                return `
+                    <div class="stat-card bg-white p-6 rounded-[2rem] shadow-sm border border-purple-100">
+                        <div onclick="showWorkerDetails('${name}')" class="cursor-pointer">
+                            <div class="flex justify-between mb-4">
+                                <h4 class="text-xl font-black text-purple-900">${name}</h4>
+                                <span class="bg-fuchsia-50 text-fuchsia-600 px-3 py-1 rounded-xl text-sm font-bold">${prog}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-4"><div class="bg-fuchsia-600 h-full" style="width: ${prog}%"></div></div>
+                            <div class="flex justify-between text-xs font-bold text-slate-500 pt-2 border-t">
+                                <span>${data.done}/${data.total} משימות להיום</span>
+                                <span>${Math.floor(data.time/60)} דק' עבודה</span>
+                            </div>
+                        </div>
+                        ${data.running.length > 0 ? `<div class="mt-4 p-3 bg-fuchsia-50 rounded-xl">
+                            <div class="text-[10px] font-bold text-fuchsia-400 mb-1">פעיל כעת:</div>
+                            ${data.running.map(r => `<div class="text-[11px] font-bold text-purple-900 truncate">${r.title}</div>`).join('')}
+                        </div>` : ''}
+                    </div>
+                `;
+            }).join('');
         }
 
-        async function toggleTask(id, currentStatus) {
-            await supabase.from('tasks').update({ is_completed: !currentStatus }).eq('id', id);
-            loadTasks();
+        function showWorkerDetails(name) {
+            document.getElementById('modalWorkerName').innerText = "ביצועי צוות: " + name;
+            const tasks = allTasks.filter(t => t.worker_name === name);
+            document.getElementById('modalTaskList').innerHTML = tasks.map(t => `
+                <div class="bg-white p-4 rounded-2xl flex justify-between items-center border border-purple-50 shadow-sm">
+                    <div>
+                        <div class="font-bold text-slate-800">${t.title}</div>
+                        <div class="text-[10px] text-purple-400 font-bold uppercase">${t.status}</div>
+                    </div>
+                    <div class="font-mono text-lg font-bold ${t.is_running ? 'text-rose-500 timer-active' : 'text-slate-600'}">
+                         ${formatTime(t.total_seconds, t.is_running ? t.last_start : null)}
+                    </div>
+                </div>`).join('');
+            document.getElementById('detailsModal').classList.add('open');
         }
 
-        function openNewTask() {
-            document.getElementById('editId').value = '';
-            document.getElementById('editTitle').value = '';
-            document.getElementById('editRecur').value = 'חד פעמי';
-            toggleHourlyFields();
+        async function addTask() {
+            const title = document.getElementById('inTitle').value;
+            const target = document.getElementById('inTargetUser').value;
+            if(!title) return;
+            let names = (target === 'כולם') ? [...new Set(allTasks.map(t => t.worker_name))] : [target === 'self' ? user : target];
+            const batch = names.map(n => ({
+                title, worker_name: n, description: document.getElementById('inDesc').value,
+                scheduled_time: document.getElementById('inTime').value || '00:00',
+                hour_range: document.getElementById('inRange').value,
+                recurrence: document.getElementById('inRecur').value, status: 'בביצוע'
+            }));
+            await _s.from('tasks').insert(batch);
+            document.getElementById('inTitle').value = ''; document.getElementById('inDesc').value = ''; document.getElementById('inRange').value = '';
+            sync();
+        }
+
+        function downloadTemplate() {
+            const csv = "\uFEFFworker_name,title,description,scheduled_time,recurrence,hour_range\nישראל,משימה לדוגמה,תיאור,08:00,יומי,";
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Template.csv"; link.click();
+        }
+
+        function handleFile(input) {
+            Papa.parse(input.files[0], { header: true, complete: async (r) => {
+                const tasks = r.data.filter(x => x.worker_name).map(x => ({ ...x, status: 'בביצוע', total_seconds: 0 }));
+                await _s.from('tasks').insert(tasks); sync();
+            }});
+        }
+
+        function openEdit(id) {
+            const t = allTasks.find(x => String(x.id) === String(id));
+            document.getElementById('editId').value = t.id; document.getElementById('editTitle').value = t.title;
+            document.getElementById('editDesc').value = t.description; document.getElementById('editTime').value = t.scheduled_time;
+            document.getElementById('editRecur').value = t.recurrence; document.getElementById('editRange').value = t.hour_range || '';
             document.getElementById('editModal').classList.add('open');
         }
 
-        async function saveTask() {
-            const recur = document.getElementById('editRecur').value;
-            const data = {
+        async function saveEdit() {
+            const id = document.getElementById('editId').value;
+            await _s.from('tasks').update({
                 title: document.getElementById('editTitle').value,
-                recurrence: recur,
-                worker_name: document.getElementById('editWorker').value,
-                is_completed: false
-            };
-
-            if (recur === 'שעתי') {
-                data.start_hour = document.getElementById('startHour').value;
-                data.end_hour = document.getElementById('endHour').value;
-                data.target_time = data.start_hour;
-            } else {
-                data.target_time = document.getElementById('editTime').value;
-            }
-
-            await supabase.from('tasks').insert([data]);
-            closeEdit();
-            loadTasks();
+                description: document.getElementById('editDesc').value,
+                scheduled_time: document.getElementById('editTime').value,
+                recurrence: document.getElementById('editRecur').value,
+                hour_range: document.getElementById('editRange').value
+            }).eq('id', id);
+            closeEdit(); sync();
         }
 
         function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
-        function handleLogin() { 
-            const u = document.getElementById('loginUser').value; 
-            if(u){ localStorage.setItem('proTrackUser', u); location.reload(); }
-        }
-        function logout() { localStorage.removeItem('proTrackUser'); location.reload(); }
-        function setPeriod(p) { renderTasks(); }
+        function closeModal() { document.getElementById('detailsModal').classList.remove('open'); }
+        function openAdminAuth() { document.getElementById('adminAuthModal').classList.add('open'); renderAdminList(); }
+        function closeAdminAuth() { document.getElementById('adminAuthModal').classList.remove('open'); }
 
-        init();
+        function renderAdminList() {
+            document.getElementById('adminList').innerHTML = admins.map(a => `
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border">
+                    <span class="font-bold text-slate-700">${a}</span>
+                    <button onclick="removeAdmin('${a}')" class="text-rose-500 font-black px-2 hover:bg-rose-50 rounded-lg">✕</button>
+                </div>`).join('');
+        }
+
+        async function addAdmin() {
+            const name = document.getElementById('newAdminName').value.trim();
+            if(!name || admins.includes(name)) return;
+            admins.push(name);
+            await _s.from('settings').upsert({ key: 'admin_users', value: admins }, { onConflict: 'key' });
+            document.getElementById('newAdminName').value = ''; renderAdminList(); sync();
+        }
+
+        async function removeAdmin(name) {
+            if(name === "שלום שיליץ") return alert("לא ניתן להסיר מנהל ראשי");
+            admins = admins.filter(a => a !== name);
+            await _s.from('settings').upsert({ key: 'admin_users', value: admins }, { onConflict: 'key' });
+            renderAdminList(); sync();
+        }
+
+        function switchTab(t) {
+            const isTask = t === 'tasks';
+            document.getElementById('sectionTasks').classList.toggle('hidden', !isTask);
+            document.getElementById('sectionAdmin').classList.toggle('hidden', isTask);
+            document.getElementById('tBtn').className = isTask ? "px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-fuchsia-700" : "px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500";
+            document.getElementById('aBtn').className = !isTask ? "px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-fuchsia-700" : "px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500";
+        }
+
+        function changePeriod(p) {
+            currentPeriod = p;
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
+            renderAdminUI();
+        }
+
+        function updateUserList() {
+            const users = [...new Set(allTasks.map(t => t.worker_name))].filter(u => u);
+            let opts = `<option value="self">עבורי (${user})</option><option value="כולם">כל הצוות</option>`;
+            users.forEach(u => { if(u !== user) opts += `<option value="${u}">${u}</option>`; });
+            document.getElementById('inTargetUser').innerHTML = opts;
+        }
+
+        function logout() { localStorage.removeItem('pro_u'); location.reload(); }
+
+        setInterval(() => {
+            document.querySelectorAll('[id^="timer-"]').forEach(el => {
+                if(el.getAttribute('data-running') === 'true') {
+                    el.innerText = formatTime(el.getAttribute('data-total'), el.getAttribute('data-start'));
+                }
+            });
+        }, 1000);
+
+        _s.channel('db').on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => sync()).subscribe();
     </script>
 </body>
 </html>
+
 
 
 
