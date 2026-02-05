@@ -309,6 +309,7 @@
             sync();
         }
 
+        // --- מנגנון הדוחות המתוקן ---
         function changePeriod(p) {
             currentPeriod = p;
             document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
@@ -321,23 +322,21 @@
             const grouped = {};
             const now = new Date();
             
-            // הגדרת תאריך התחלה לפי התקופה שנבחרה
-            let startDate = new Date();
-            if (currentPeriod === 'day') startDate.setHours(0,0,0,0);
-            else if (currentPeriod === 'week') startDate.setDate(now.getDate() - now.getDay());
-            else if (currentPeriod === 'month') startDate.setDate(1);
-            startDate.setHours(0,0,0,0);
+            let startOfPeriod = new Date();
+            if (currentPeriod === 'day') startOfPeriod.setHours(0,0,0,0);
+            else if (currentPeriod === 'week') startOfPeriod.setDate(now.getDate() - now.getDay());
+            else if (currentPeriod === 'month') startOfPeriod.setDate(1);
+            startOfPeriod.setHours(0,0,0,0);
 
             allTasks.forEach(t => {
                 if(!t.worker_name) return;
                 if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0 };
                 
-                const tDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
-                const isInPeriod = tDate && tDate >= startDate;
-                
-                // במבט יומי נספור את כל המשימות המשויכות, במבט תקופתי נספור את מה שבוצע
+                const compDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
+                const isCompletedInPeriod = compDate && compDate >= startOfPeriod;
+
                 grouped[t.worker_name].total++;
-                if(isInPeriod || (currentPeriod === 'day' && t.status === 'הושלם')) {
+                if (isCompletedInPeriod || (currentPeriod === 'day' && t.status === 'הושלם')) {
                     grouped[t.worker_name].done++;
                     grouped[t.worker_name].time += (t.total_seconds || 0);
                 }
@@ -362,6 +361,7 @@
                 `;
             }).join('');
         }
+        // ------------------------------
 
         function openEdit(id) {
             const t = allTasks.find(x => String(x.id) === String(id));
@@ -452,8 +452,5 @@
     </script>
 </body>
 </html>
-
-
-
 
 
