@@ -251,18 +251,86 @@
             sync();
         }
 
-        // --- דוחות חיצוניים ---
-        function changePeriod(p) {
-            currentPeriod = p;
-            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
-            renderAdminUI();
+        function renderAdminUI() {
+    if(!admins.includes(user)) return;
+    const statsDiv = document.getElementById('adminStats');
+    const grouped = {};
+    const now = new Date();
+    
+    // הגדרת תאריך התחלה לפילטרים
+    let filterStart = new Date();
+    if(currentPeriod === 'day') {
+        filterStart.setHours(0,0,0,0);
+    } 
+    else if(currentPeriod === 'week') {
+        filterStart.setDate(now.getDate() - now.getDay());
+        filterStart.setHours(0,0,0,0);
+    } 
+    else if(currentPeriod === 'month') {
+        // הגדרה ספציפית: החודש מתחיל ב-5 לחודש הנוכחי (היום 05/02/2026)
+        filterStart = new Date(now.getFullYear(), now.getMonth(), 5, 0, 0, 0);
+        // אם היום עוד לא ה-5 לחודש, נלך ל-5 לחודש הקודם
+        if (now < filterStart) {
+            filterStart.setMonth(filterStart.getMonth() - 1);
+        }
+    }
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0,0,0,0);
+
+    allTasks.forEach(t => {
+        if(!t.worker_name) return;
+        if(!grouped[t.worker_name]) {
+            grouped[t.worker_name] = { 
+                totalTasksInPeriod: 0, 
+                doneInPeriod: 0, 
+                timeInPeriod: 0,
+                timeToday: 0 
+            };
         }
 
-        function renderAdminUI() {
-            if(!admins.includes(user)) return;
-            const statsDiv = document.getElementById('adminStats');
-            const grouped = {};
+        const compDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
+        
+        // ספירה לתקופה הנבחרת
+        grouped[t.worker_name].totalTasksInPeriod++;
+        if(compDate && compDate >= filterStart) {
+            grouped[t.worker_name].doneInPeriod++;
+            grouped[t.worker_name].timeInPeriod += (t.total_seconds || 0);
+        }
+
+        // חישוב זמן עבודה להיום בלבד
+        if(compDate && compDate >= startOfToday) {
+            grouped[t.worker_name].timeToday += (t.total_seconds || 0);
+        } else if (t.is_running && t.worker_name === user) {
+            const sessionToday = Math.floor((new Date() - new Date(t.last_start)) / 1000);
+            grouped[t.worker_name].timeToday += (t.total_seconds || 0) + sessionToday;
+        }
+    });
+
+    statsDiv.innerHTML = Object.entries(grouped).map(([name, data]) => {
+        const percent = Math.round((data.doneInPeriod / data.totalTasksInPeriod) * 100 || 0);
+        const periodLabel = currentPeriod === 'month' ? "מה-5 לחודש" : (currentPeriod === 'week' ? "השבוע" : "היום");
+
+        return `
+            <div class="bg-white p-6 rounded-3xl shadow-sm border-r-4 border-purple-600">
+                <h4 class="text-xl font-black mb-2">${name}</h4>
+                <div class="text-3xl font-bold text-fuchsia-600 mb-1">${percent}%</div>
+                <div class="text-xs font-bold text-slate-400 mb-4">ביצוע ${periodLabel}: ${data.doneInPeriod}/${data.totalTasksInPeriod}</div>
+                
+                <div class="space-y-2 pt-4 border-t">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500 font-bold">זמן עבודה היום:</span>
+                        <span class="text-purple-900 font-black">${Math.floor(data.timeToday / 60)} דקות</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500 font-bold">סה"כ לתקופה:</span>
+                        <span class="text-slate-700 font-bold">${Math.floor(data.timeInPeriod / 60)} דקות</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
             const now = new Date();
             let start = new Date();
             if(currentPeriod === 'day') start.setHours(0,0,0,0);
@@ -375,6 +443,7 @@
     </script>
 </body>
 </html>
+
 
 
 
