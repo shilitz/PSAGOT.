@@ -113,7 +113,7 @@
 
         <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center border-b border-purple-100 shadow-sm">
             <div class="flex items-center gap-8">
-               <img src="logo.png" alt="פסגות" class="logo-img h-10">
+                <img src="logo.png" alt="פסגות" class="h-10">
                 <div class="flex gap-1 bg-purple-50 p-1 rounded-xl">
                     <button onclick="switchTab('tasks')" id="tBtn" class="px-4 py-1.5 rounded-lg text-sm font-bold transition-all bg-white shadow-sm text-fuchsia-700">משימות שלי</button>
                     <button onclick="switchTab('admin')" id="aBtn" class="hidden px-4 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-500 hover:text-purple-700">לוח מנהלים</button>
@@ -322,34 +322,51 @@
             const statsDiv = document.getElementById('adminStats');
             const grouped = {};
             const now = new Date();
-            const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay());
+            
+            // הגדרת טווח התאריכים לחישוב משימות יעד
+            let startDate = new Date(now);
+            if(currentPeriod === 'day') startDate = new Date(now.setHours(0,0,0,0));
+            else if(currentPeriod === 'week') startDate.setDate(now.getDate() - now.getDay());
+            else if(currentPeriod === 'month') startDate.setDate(1);
+            else startDate = new Date(2025, 0, 1); // הכל
+
+            const diffDays = Math.max(1, Math.floor((now - startDate) / (1000 * 60 * 60 * 24)) + 1);
 
             allTasks.forEach(t => {
                 if(!t.worker_name) return;
+                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0, running: [] };
+
+                // חישוב כמה משימות כאלו היו אמורות להתבצע בתקופה
+                let taskTarget = 1;
+                if(t.recurrence === 'יומי') taskTarget = diffDays;
+                else if(t.recurrence === 'שעתי') taskTarget = diffDays * 8; // הנחה של 8 שעות פעילות ביום כברירת מחדל
+                
+                grouped[t.worker_name].total += taskTarget;
+
+                // בדיקת ביצוע
                 const tDate = t.last_completed_date ? new Date(t.last_completed_date) : null;
                 let isMatch = false;
                 if(currentPeriod === 'day') isMatch = tDate && tDate.toDateString() === now.toDateString();
-                else if(currentPeriod === 'week') isMatch = tDate && tDate >= startOfWeek;
+                else if(currentPeriod === 'week') isMatch = tDate && tDate >= startDate;
                 else if(currentPeriod === 'month') isMatch = tDate && tDate.getMonth() === now.getMonth();
-                else isMatch = true;
+                else isMatch = (t.status === 'הושלם' || t.last_completed_date);
 
-                if(!grouped[t.worker_name]) grouped[t.worker_name] = { total: 0, done: 0, time: 0, running: [] };
-                grouped[t.worker_name].total++;
+                if(isMatch) {
+                    // כאן אנחנו מחשבים את המשימות שבוצעו בפועל
+                    // במשימה יומית, אם בוצעה היום בתקופת "חודש", אנחנו צריכים לדעת כמה פעמים סה"כ היא בוצעה. 
+                    // לצורך הפשטות במבנה הנוכחי, נחשיב ביצועים לפי ימים שעברו אם המשימה לא "בביצוע" כרגע
+                    grouped[t.worker_name].done += (t.recurrence === 'יומי' && isMatch && currentPeriod !== 'day') ? diffDays : 1;
+                }
 
                 let taskTime = (t.total_seconds || 0);
-                if(t.is_running && t.last_start) {
-                    taskTime += Math.floor((new Date() - new Date(t.last_start)) / 1000);
-                }
+                if(t.is_running && t.last_start) taskTime += Math.floor((new Date() - new Date(t.last_start)) / 1000);
+                grouped[t.worker_name].time += taskTime;
 
-                if(isMatch || t.status === 'הושלם') {
-                    grouped[t.worker_name].done++;
-                    grouped[t.worker_name].time += taskTime;
-                }
                 if(t.is_running) grouped[t.worker_name].running.push(t);
             });
 
             statsDiv.innerHTML = Object.entries(grouped).map(([name, data]) => {
-                const prog = Math.round((data.done / data.total) * 100) || 0;
+                const prog = Math.min(100, Math.round((data.done / data.total) * 100)) || 0;
                 return `
                     <div class="stat-card bg-white p-6 rounded-[2rem] shadow-sm border border-purple-100">
                         <div onclick="showWorkerDetails('${name}')" class="cursor-pointer">
@@ -507,6 +524,7 @@
     </script>
 </body>
 </html>
+
 
 
 
